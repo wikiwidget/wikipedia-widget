@@ -1,0 +1,142 @@
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head>
+	<script type="text/javascript" src="file:///System/Library/WidgetResources/button/genericButton.js" charset="utf-8"/>
+	<script type="text/javascript" src="Scripts/Fader.js"></script>
+	<script type="text/javascript" src="Scripts/Scroller.js"></script>
+	<script type="text/javascript" src="Scripts/Stretcher.js"></script>
+	<script type="text/javascript" src="Main.js"></script>
+	<script type="text/javascript" src="localizedStrings.js"></script>
+	<style type="text/css">
+		@import "wikiMonobookMain.css";
+		@import "wikiMonobook.css";
+		@import "wikiCommon.css";
+		@import "widgetStuff.css";
+	</style>
+</head>
+
+<body onload="loaded();">
+
+<div id="wdgtFront" onmousemove="flipper.fadeIn();" onmouseout="flipper.fadeOut();" onmousewheel="mouseWheelMove();">
+	<div id="bottomBarLeft"></div>
+	<div id="bottomBarMiddle"></div>
+	<div id="bottomBarRight"></div>
+	<div id="centerLeft"></div>
+	<div id="centerMiddle"></div>
+	<div id="ghostImage"></div>
+	<div id="centerRight"></div>
+	<div id="topBarLeft"></div>
+	<div id="topBarMiddle"></div>
+	<div id="topBarRight"></div>
+	
+	<!--<input id="wdgtSearchInput" size="21" type="search"  placeholder="" autosave="searchHistory" results="10" onSearch="searchWiki(this.value);" /> -->
+	<div id='wdgtSearchInputDiv'>
+	</div>
+	<img id="backButton" src="Images/backButtonOff.png" onmousedown="goBackInHistory();"></img>
+	<img id="forwardButton" src="Images/forwardButtonOff.png" onmousedown="goForwardInHistory();"></img>
+
+	<img id="randomLink" src="Images/randomOff.png" onmouseover='document.getElementById("randomLink").src = "Images/randomOn.png";' onmouseout='document.getElementById("randomLink").src = "Images/randomOff.png";' onmousedown="searchWiki('Special:Randompage');"></img>
+	
+	<img id='wikiLink' src="Images/wikiOff.png" onmouseover='this.src="Images/wikiOn.png";' onmouseout='this.src="Images/wikiOff.png";' onmousedown="openInBrowser();"></img>
+	<img id="progressGraphic" src="Images/prog1.png" /><!-- onmousedown="cancelArticleRequest();" onmouseover='document.getElementById("cancelButton").style.display="block";' /> -->
+	<img id='cancelButton' src="Images/progX.png" onmousedown="cancelArticleRequest();" onmouseout='this.style.display = "none";' />
+	<div id='parentDiv'>
+		<div class='mainContent' id='wdgtContent'></div>
+		<div id='myScrollBar'>
+			<div id='myScrollTrack'>
+				<div class='scrollTrackTop' id='myScrollTrackTop'></div>
+				<div class='scrollTrackMid' id='myScrollTrackMid'></div>
+				<div class='scrollTrackBot' id='myScrollTrackBot'></div>
+			</div>
+			<div id='myScrollThumb'>
+				<div class='scrollThumbTop' id='myScrollThumbTop'></div>
+				<div class='scrollThumbMid' id='myScrollThumbMid'></div>
+				<div class='scrollThumbBot' id='myScrollThumbBot'></div>
+			</div>
+		</div>
+	</div>
+	
+	<span id='updateMessage' onclick="widget.openURL('http://www.whatsinthehouse.com/widgets/');"></span>
+   <span id='editButton'></span>
+
+	<img  id="ResizeBox" src="Images/resizer.png" onmousedown="mouseDown(event);"/>
+	<span id='fontSizeSmaller' onclick='setFontSize("down");'></span>
+	<span id='fontSizeBigger' onclick='setFontSize("up");'></span>
+		
+
+	<div class='flip' id='fliprollie'></div>
+	<div class='flip' id='flip' onclick='showBackside(event);' onmouseover='document.getElementById("fliprollie").style.display="block";' onmouseout='document.getElementById("fliprollie").style.display="none";'></div>
+</div>
+	
+
+<div id='wdgtBack'>
+	<span class='labelText' id='languageLabel'></span>
+	<select name="languageSelect" id="languageSelect" onChange="languageSelectDidChange()"> 
+		<option value='da' id="daOption">Dansk</option>
+		<option value='de' id="deOption">Deutsch</option>
+		<option value='en' id="enOption">English</option>
+		<option value='es' id="esOption">Español</option>
+		<option value='fr' id="frOption">Français</option>
+		<option value='is' id="isOption">Íslenska</option>
+		<option value='it' id="itOption">Italiano</option>
+		<option value='ko' id="koOption">한국어</option>
+		<option value='la' id="laOption">Latina</option>
+		<option value='nl' id="nlOption">Nederlands</option>
+		<option value='ja' id="jaOption">日本語</option>
+		<option value='no' id="noOption">Norsk (bokmål)</option>
+		<option value='pl' id="plOption">Polski</option>
+		<option value='pt' id="ptOption">Português</option>
+		<option value='ru' id="ruOption">Русский</option>
+		<option value='fi' id="fiOption">Suomi</option>
+		<option value='sv' id="svOption">Svenska</option>
+		<option value='zh' id="zhOption">中文</option>
+		<option value='other' id="otherLangOption"></option>
+	</select>
+	<input type="text" size="4" id="languageField" onKeyUp="languageFieldDidChange()" />
+	
+	<span class="labelText" id="cacheLabel"></span>
+	<input type="text" size="4" id="cacheField" />
+	<input type="button" id="cacheButton" value="" onclick="emptyCache()" />
+	<span class="labelText" id="cacheMinutesLabel"></span>
+	
+	<span class="labelText" id="colorLabel"></span>
+	<select id="colorSelect">
+		<option value="blue" id="blueOption"></option>
+		<option value="green" id="greenOption"></option>
+		<option value="grey" id="greyOption"></option>
+		<option value="red" id="redOption"></option>
+		<!-- <option value="purple" id="purpleOption"></option> -->
+
+	</select>
+	
+	<div id="checkForUpdatesDiv">
+		<span class="labelText" id="checkForUpdatesLabel"></span>
+		<input type="checkbox" id="checkForUpdatesBox" />
+	</div>
+	
+	<span class="labelText" id="versionNumber" onclick="widget.openURL('http://www.whatsinthehouse.com/widgets/');" onmouseover='this.style.opacity="0.7";' onmouseout='this.style.opacity="0.5";'></span>
+	<img id="wikiLogoImg" src="Images/wikipedia.png" onclick="widget.openURL('http://www.wikipedia.org');"/>
+	<span id="wikiLogoAlt"></span>
+	
+	<div id="wdgtDoneButton"></div>
+	
+	<div id="commentButton" onclick="toggleCommentWindow();" onmouseover='this.style.opacity="0.8";' onmouseout='this.style.opacity="0.6";'>✉</div>
+	<div id="commentStatusMessage" onclick="widget.openURL('http://www.whatsinthehouse.com/widgets/comments.php');"></div>
+	<div id="commentWindow">
+	  <span class="labelText" id="nameLabel"></span>
+	  <br />
+	  <textarea id="nameField" rows="1" cols="0" tabindex="1"></textarea>
+	  <br />
+	  <span class="labelText" id="commentLabel"></span>
+	  <br/>
+	  <textarea id="commentField" rows="6" cols="19" tabindex="2"></textarea>
+	  <div id="submitCommentButton"></div>
+	  <div id="cancelCommentButton"></div>
+	</div>
+	
+</div>
+
+	
+</body>
+
+</html>

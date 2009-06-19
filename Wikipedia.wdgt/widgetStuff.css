@@ -1,0 +1,543 @@
+/*p { font-size: 12px; color: #333; font-family: Verdana, Arial; }
+*/
+h1 { font-weight: bold; font-family: Verdana, Arial;}
+.firstHeading {
+	font-size:110%;
+}
+/*ol  {line-height: 18px; }
+dt  {font-size: 12px; font-weight:bold; line-height: 18px; }
+dd  {font-size: 11px; margin-left:2em; }
+li  { font-size: 12px; padding-left: 0; margin-left: 0; }
+*/
+
+#wdgtFront {
+	display: block;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	left: 0px;
+	bottom: 0px;
+	height: 100%;
+	
+}
+
+#parentDiv {
+	position:absolute;
+	top:36px;
+	bottom:36px;
+	width:100%;
+	overflow:hidden;
+}
+.mainContent {
+	position:absolute;
+	left:18px;
+	top:5px;
+	right:44px;
+	display:none;
+    z-index: 10;
+    overflow: hidden;
+    -apple-dashboard-region:dashboard-region(control rectangle);
+	-khtml-user-select:text;
+}
+
+/*
+*   Round bar
+*/
+/*
+#roundBarLeft {
+	position: absolute;
+	top: 5px;
+	left: 7px;
+    width: 36px;
+    height: 42px;
+    background-image:  url("Images/roundBarLeft.png");
+	background-repeat:  no-repeat;
+}
+#roundBarMiddle {
+	position: absolute;
+	top: 5px;
+	left: 41px;
+	right: 46px;
+    height: 42px;
+    background-image:  url("Images/roundBarMiddle.png");
+	background-repeat:  repeat-x;
+}
+#roundBarRight {
+	position: absolute;
+	top: 5px;
+	right: 10px;
+    width: 36px;
+    height: 42px;
+    background-image:  url("Images/roundBarRight.png");
+	background-repeat:  no-repeat;
+}
+*/
+/*
+*   Background boxes
+*/
+
+#topBarLeft {
+	position: absolute;
+	top: 0px;
+	left: 1px;
+    width: 36px;
+    height: 41px;
+    background-image:  url("Images/topBarLeft-blue.png");
+	background-repeat:  no-repeat;
+	z-index:13;
+}
+#topBarMiddle {
+	position: absolute;
+	top: 0px;
+	left: 37px;
+	right: 42px;
+    height: 41px;
+    background-image:  url("Images/topBarMiddle-blue.png");
+	background-repeat:  repeat-x;
+	z-index:13;
+}
+#topBarRight {
+	position: absolute;
+	top: 0px;
+	right: 6px;
+    width: 36px;
+    height: 41px;
+    background-image:  url("Images/topBarRight-blue.png");
+	background-repeat:  no-repeat;
+	z-index:13;
+}
+#centerLeft {
+	position: absolute;
+	top: 37px;
+	left: 1px;
+	bottom: 36px;
+    width: 34px;
+    background-image:  url("Images/centerLeft-blue.png");
+	background-repeat:  repeat-y;
+}
+#centerMiddle {
+	position: absolute;
+	top: 37px;
+	left: 35px;
+	right: 39px;
+	bottom: 36px;
+    background-image:  url("Images/centerMiddle-blue.png");
+	background-repeat:  repeat;
+}
+#centerRight {
+	position: absolute;
+	top: 37px;
+	right: 5px;
+	bottom: 36px;
+    width: 34px;
+    background-image:  url("Images/centerRight-blue.png");
+	background-repeat:  repeat-y;
+}
+#bottomBarLeft {
+	position: absolute;
+	bottom: 0px;
+	left: 1px;
+    width: 36px;
+    height: 36px;
+    background-image:  url("Images/bottomBarLeft-blue.png");
+	background-repeat:  no-repeat;
+}
+#bottomBarMiddle {
+	position: absolute;
+	bottom: 0px;
+	left: 37px;
+	right: 42px;
+    height: 36px;
+    background-image:  url("Images/bottomBarMiddle-blue.png");
+	background-repeat:  repeat-x;
+}
+#bottomBarRight {
+	position: absolute;
+	bottom: 0px;
+	right: 6px;
+    width: 36px;
+    height: 36px;
+    background-image:  url("Images/bottomBarRight-blue.png");
+	background-repeat:  no-repeat;
+}
+#ghostImage {
+	position: absolute;
+	top: 37px;
+	left: 35px;
+	right: 39px;
+	bottom: 36px;
+    background-image:  url("Images/nohat_faded.png");
+	background-repeat:  no-repeat;
+	background-position: center center;
+    background-attachment: fixed;
+}
+#wdgtSearchInput {
+    font-size: 15px;
+	position:absolute;
+	top:12px;
+	right:22px;
+    z-index: 15;
+}
+#progressGraphic {
+    display:none;
+	position:absolute;
+	top:15px;
+	right:216px;
+	height: 17px;
+	width: 17px;
+    z-index: 15;
+}
+#cancelButton {
+    display: none;
+	position:absolute;
+	top:15px;
+	right:216px;
+	height: 17px;
+	width: 17px;
+    z-index: 16;
+    opacity: 0.5;
+}
+#wikiLink {
+	position:absolute;
+	top:14px;
+	left:18px;
+    z-index: 15;
+}
+#randomLink {
+	position:absolute;
+	top:15px;
+	left:114px;
+    z-index: 15;
+}
+#backButton {
+	position:absolute;
+	top:17px;
+	right:201px;
+	width: 13px;
+	height: 13px;
+    z-index: 15;
+}
+#forwardButton {
+	position:absolute;
+	top:17px;
+	right: 183px;
+	width: 13px;
+	height: 13px;
+    z-index: 15;
+}
+
+#myScrollBar {
+	position:absolute;
+	right:0px;
+	top:9px;
+	bottom:14px;
+	right:21px;
+	width:19px;
+	display:block;
+	z-index: 25;
+	-apple-dashboard-region:dashboard-region(control rectangle);
+}
+
+#editButton {
+	font-size: 18px;
+	color: #833F2F;
+/*	3ab4d5 */
+/*	display: none;
+*/	font-family: Lucida;
+	position:absolute;
+	right:60px;
+	bottom:17px;
+/*	z-index:20;
+	text-shadow: 2px 2px 4px #999;
+	opacity: 0.9;
+*/}
+
+#fontSizeSmaller {
+	color: #833F2F;
+	font-size: 12px;
+	position:absolute;
+	right:97px;
+	bottom:18px;
+}
+#fontSizeBigger {
+	color: #833F2F;
+	font-size: 15px;
+	position:absolute;
+	right:85px;
+	bottom:18px;
+}
+
+.flip {
+	position:absolute;
+	bottom: 20px;
+	left: 19px;
+	width:13px;
+	height:13px;
+}
+#flip {
+	opacity:0;
+	background: url(file:///System/Library/WidgetResources/ibutton/black_i.png) no-repeat top left;
+	z-index:8000;
+
+}
+#fliprollie {
+	display:none;
+	opacity:0.25;
+	background: url(file:///System/Library/WidgetResources/ibutton/black_rollie.png) no-repeat top left;
+	z-index:7999;
+}
+#ResizeBox {
+   display:none;
+	position:absolute;
+	right:24px;
+	bottom:22px;
+	z-index:20;
+	-apple-dashboard-region: dashboard-region(control rectangle);
+}
+
+#wdgtBack {
+ 	display: none;
+	position: static;
+	height: 211px;
+	width: 377px;
+ 	background-image:  url("Images/backside.png");
+	background-repeat:  no-repeat;
+}
+#wdgtBack img {
+	border: none;
+	vertical-align: top;
+}
+.labelText {
+	font: 11px "Helvetica Neue";
+	font-weight: bold;
+	color: white;
+}
+ 
+#languageLabel {
+	position: absolute;
+	top: 26px;
+	left: 31px;
+}
+#languageField {
+	position: absolute;
+	top:  22px; //30px;
+	left: 129px;
+}
+#languageSelect {
+    position: absolute;
+    top: 22px;
+    left: 167px;
+}
+#cacheLabel {
+    position: absolute;
+    top: 51px;
+    left: 31px;
+}
+#cacheMinutesLabel {
+	position: absolute;
+	top: 88px;
+	left: 30px;
+    opacity: 0.75;
+}
+#cacheField {
+	position: absolute;
+	top: 65px;
+	left: 32px;
+}
+#cacheButton {
+	position: absolute;
+	top: 66px;
+	left: 83px;
+}
+#colorLabel {
+	position: absolute;
+	top: 118px;
+	left: 31px;
+}
+#colorSelect {
+	position: absolute;
+	top: 114px;
+	left: 80px;
+}
+#checkForUpdatesLabel {}
+#checkForUpdatesBox {}
+#checkForUpdatesDiv {
+	position: absolute;
+	top: 144px;
+	left: 31px;
+}
+
+#wikiLogo {
+	position: absolute;
+	top: 105px;
+	left: 180px; //60px;
+	height: 20px;
+	width: 120px;
+}
+#wikiLogoImg {
+	position: absolute;
+	top: 105px;
+	left: 180px; //60px;
+	height: 20px;
+	width: 120px;
+}
+#wikiLogoAlt a:link { color: white; text-decoration: none }
+#wikiLogoAlt a:visited { color: white; text-decoration: none }
+#wikiLogoAlt a:hover { color: white; text-decoration: none }
+#wikiLogoAlt {
+	font: 13px "Helvetica Neue";
+	font-weight: bold;
+	color: white;
+	position: absolute;
+	top: 105px;
+	left: 180px; //60px;
+	height: 20px;
+	width: 120px;
+}
+#versionNumber {
+   display: block;
+	position: absolute;
+	top: 189px;
+	left: 28px;
+	opacity: 0.5;
+}
+#commentButton {
+	font-size: 25px;
+	font-weight: bold;
+	color: white;
+	display: block;
+	position: absolute;
+	top: 180px;
+	left: 66px;
+	opacity: 0.6;
+}
+#commentStatusMessage {
+	font-size: 14px;
+	font-weight: bold;
+	color: white;
+	display: block;
+	position: absolute;
+	top: 188px;
+	left: 86px;
+	opacity: 0.6;
+}
+#commentWindow {
+	display: none;
+	background-color: #212121;
+	border: 3px solid #333;
+	position: absolute;
+	z-index: 100;
+	top:24px;
+	left:28px;
+	width: 270px;
+	height: 139px;
+	padding:5px 0 0 10px;
+	opacity: 1;
+	
+}
+#nameField {
+	width:200px;
+	height: 19px;
+	overflow: hidden;
+	color: #bbb;
+	background-color: #212121;
+	opacity: 1;
+}
+#nameLabel {
+	color: #999;
+	font-weight: 600;
+	text-shadow: 2px 2px 0px #222;	
+}
+#commentLabel {
+	color: #999;
+	font-weight: 600;
+	text-shadow: 2px 2px 0px #222;
+}
+
+#commentField {
+	width: 258px;
+	height: 50px;
+	background-color: #212121;
+	overflow: hidden;
+	color: #bbb;
+	opacity: 1;
+}
+#submitCommentButton {
+	margin-top:4px;
+	margin-right: 60px;
+	float:right;
+}
+#cancelCommentButton {
+	margin-top:4px;
+	margin-left: 50px;
+	float:left;
+}
+#updateMessage {
+	font: 12px "Helvetica Neue";
+	font-weight: 580;
+	color: #833F2F;
+    display: none;
+	position: absolute;
+	bottom: 20px;
+	left: 50px;
+/*    text-shadow: 2px 2px 4px #999;
+*/    opacity: 0.9;
+}
+#wdgtDoneButton {
+ 	position: fixed;
+    top: 174px;
+    left: 265px;
+}
+
+
+/*	Scroller track	*/
+.scrollTrackTop {
+	position:absolute;
+	top:0px;
+	width:19px;
+	height:18px;
+	background:url("Images/top_scroll_track.png") no-repeat top left;
+}
+.scrollTrackMid {
+	position:absolute;
+	top:18px;
+	width:19px;
+	bottom:18px;
+	background:url("Images/mid_scroll_track.png") repeat-y top left;
+}
+.scrollTrackBot {
+	position:absolute;
+	bottom:0px;
+	width:19px;
+	height:18px;
+	background:url("Images/bottom_scroll_track.png") no-repeat top left;
+}
+
+#myScrollThumb {
+	position:absolute;
+	top:-1px;
+	left:1px;
+	height:28px;
+	display:block;
+}
+.scrollThumbTop {
+	position:absolute;
+	top:0px;
+	width:18px;
+	height:9px;
+	background:url("Images/scroll_bar_top.png") no-repeat top left;
+}
+.scrollThumbMid {
+	position:absolute;
+	top:9px;
+	width:18px;
+	bottom:9px;
+	background:url("Images/scroll_bar_mid.png") repeat-y top left;
+}
+.scrollThumbBot {
+	position:absolute;
+	bottom:0px;
+	width:18px;
+	height:9px;
+	background:url("Images/scroll_bar_bottom.png") no-repeat top left;
+}

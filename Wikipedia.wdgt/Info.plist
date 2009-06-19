@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AllowFileAccessOutsideOfWidget</key>
+	<true/>
+	<key>AllowNetworkAccess</key>
+	<true/>
+	<key>AllowSystem</key>
+	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>Wikipedia</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.whatsinthehouse.widget.wikipedia</string>
+	<key>CFBundleName</key>
+	<string>Wikipedia</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.9.2</string>
+	<key>CFBundleVersion</key>
+	<string>0.9.2</string>
+	<key>CloseBoxInsetX</key>
+	<integer>11</integer>
+	<key>CloseBoxInsetY</key>
+	<integer>11</integer>
+	<key>Height</key>
+	<integer>73</integer>
+	<key>MainHTML</key>
+	<string>wiki.html</string>
+	<key>Width</key>
+	<integer>367</integer>
+</dict>
+</plist>
