@@ -207,8 +207,6 @@ function openInBrowser() {
 			wikiUrl = 'http://' + langcode + '.wikipedia.org/wiki/';
 		}
 	}
-//	widget.openURL()
-//	openLinkInBrowser(wikiUrl);
 	if (window.widget) {
 		//wikiUrl = escape(wikiUrl);
 	//	alert(wikiUrl)
@@ -244,6 +242,7 @@ function openArticle(article) {
 	if (window.widget) {
 		widget.system("find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", null);
 	}
+		
 	req = new XMLHttpRequest();
 	req.open("GET", article.file, false);
 	req.send(null);
@@ -267,19 +266,13 @@ function requestArticle(article) {
 		output = "<p>"+getLocalizedString("<b>Please enter a Wikipedia language code</b> in the preference panel of this widget.  These are the letters (usually 2, sometimes 3 or more) found in the Wikipedia URL for your language: htt://XX.wikipedia.org, where XX is the language code.  Here are some common codes:") + "</p><ul><li>English - en</li><li>Deutsch - de</li><li>日本語 - ja</li><li>Français - fr</li><li>Svenska - sv</li><li>Polski - pl</li><li>Nederlands - nl</li><li>Español - es</li><li>Italiano - it</li><li>Português - pt</li><li>Simple English - simple</ul>";
 		displayContent(output);
 	} else {
-		//	--connect-timeout 30 --max-time 30
 		var l = article.lang;
-//		if (l=='sv'||l=='nl') { // || l=='en'  <- this kills the 'next search results' link  
-//			searchName = escape(article.name);
-//		} else {
-			searchName = article.name;
-//		}
+		searchName = article.name;
 		searchName = searchName.replace(/_/g, '+'); //.replace(/&/g, "%26")
 		
 		var specPage = false;
 		
 		if (searchName.indexOf('=')>0 && searchName.indexOf('&')>0) {
-		//	alert('specPage: & and =');
 			specPage = true;
 		}
 		
@@ -301,11 +294,7 @@ function requestArticle(article) {
 		if (!specPage) {
 				reqUrl = "http://"+article.lang+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
 		} else {
-//			if (searchName.indexOf('action=edit') || searchName.indexOf('fulltext=Search')) {
-//				reqUrl = "http://"+article.lang+".wikipedia.org/wiki/Special:Search?search=";
-//			} else {
 			reqUrl = "http://"+article.lang+".wikipedia.org/w/index.php?title="+searchName;
-//			}
 		}
 		
 		if (ALTERNATE_WIKI) {
@@ -314,25 +303,16 @@ function requestArticle(article) {
 			reqUrl = getAlternateURL(searchName);
 		}
 
-	//	if (article.lang == 'it') {
-	//		reqUrl = encodeURI(reqUrl);
-	//	}
-	//	alert('specPage = '+specPage)
-	//	alert('reqUrl: '+reqUrl);
 		wikiReq = new XMLHttpRequest();
 		wikiReq.onreadystatechange = checkRequestResponse;
 		wikiReq.open("GET", reqUrl, true);
-//		wikiReq.setRequestHeader("Cookie", null);
 		wikiReq.setRequestHeader("Cache-Control", "no-cache");
 		wikiReq.send(null);
 	}
 }
 
 function checkRequestResponse() {
-	//alert('readyState: '+wikiReq.readyState);
 	if (wikiReq.readyState == 4) {
-	//	alert('req status:'+wikiReq.status)
-	//	alert(wikiReq.responseText)
 		if (wikiReq.status == 200) {
 			response = wikiReq.responseText;
 			processRawHTML(response);
@@ -542,9 +522,6 @@ function scrollToAnchor(anchorName) {
 
 
 function displayContent(input) {
-//	alert('isStretched: '+stretcher.isStretched())
-//	var tooSmallForEdit = true;
-	
 	if (input == "collapse") {
 		input = "";
 		
@@ -552,7 +529,6 @@ function displayContent(input) {
 			document.getElementById('ResizeBox').style.display = "none";
 			stretcher.stretch(event);
 		}
-	//	alert('shrink now')
 		document.getElementById('editButton').style.display = "none";
 		document.getElementById('editButton').innerHTML = '';
 		document.getElementById('fontSizeSmaller').innerHTML = '';
@@ -568,33 +544,8 @@ function displayContent(input) {
 		document.getElementById('fontSizeSmaller').innerHTML = 'A';
 		document.getElementById('fontSizeBigger').innerHTML = 'A';
 		document.getElementById('editButton').onclick = function() { searchWiki(historyArray[historyPointer].name + '&action=edit') }
-/*		if (historyArray[historyPointer].name.indexOf('action=edit') > 0) {
-			alert('wpText found')
-			stretcher.maxVertPosition = 400;
-			tooSmallForEdit = false;
-		}
-*/		stretcher.stretch(event);
-//		setTimeout(function() {stretcher.minVertPosition = 73;}, 800);
+		stretcher.stretch(event);
 	}
-	
-/*	if (historyArray[historyPointer].name.indexOf('action=edit') > 0 && tooSmallForEdit) {
-		alert('edit page and too small');
-		alert('stretchNow = '+stretcher.vertPositionNow);
-		alert('stretchMax = '+stretcher.maxVertPosition);
-		alert('stretchMin = '+stretcher.minVertPosition);
-		alert('winheight: '+window.innerHeight)
-		if (window.innerHeight < 400) {
-			alert('too small')
-			var tmin = stretcher.minVertPosition;
-			stretcher.minVertPosition = stretcher.vertPositionNow;
-			stretcher.maxVertPosition = 400;
-			stretcher.stretch(event);
-			setTimeout(function() {stretcher.minVertPosition = tmin;}, 1000);
-		} else {
-			alert('big enough')
-		}
-	}
-*/
 	
 	progInd.stop();
 	document.getElementById('wdgtContent').innerHTML = input;
@@ -672,11 +623,6 @@ function processForm(buttonName) {
 	//todo: ALTERNATE_WIKI me
 	formUrl = 'http://'+langcode+'.wikipedia.org'+ f.action;
 	
-//	c = '/usr/bin/curl -q -i -L --max-redirs 1 -c /dev/null -d "'+postStr+'" --url "'+formUrl+'"';
-//	alert(c)
-//	cr = widget.system(c,null).outputString;
-//	alert(cr);
-//	alert(formUrl);
 	wikiReq = new XMLHttpRequest();
 	wikiReq.onreadystatechange = checkRequestResponse;
 	wikiReq.open("POST", formUrl, false);	
@@ -743,8 +689,6 @@ function stretchFinished() {
 		setTimeout( function() { transitionToBack(); }, 30); 
 	} else if (frontsideRequested == true) {
 		frontsideRequested = false;
-	//	stretcher.maxVertPosition = tempHeight;
-	//	stretcher.maxHorizPosition = tempWidth;
 		stretcher.minVertPosition = 73;
 	}
 	calculateAndShowThumb(document.getElementById('wdgtContent'));
@@ -993,42 +937,10 @@ function setFontSize(size) {
 	document.body.style.fontSize = newSize+'px';
 }
 
-function showBackside(event) {
-
-//	if (stretcher.isStretched() == true) {
-//	^ this seems to be the source of the 'shrinking too much' bug, but not sure
-//	alert('winInnerHeight: '+ window.innerHeight)
-//	alert('i clicked');
-	
-//	cssWidth = parseInt(document.getElementById('wdgtFront').style.width);
-//	cssHeight = parseInt(document.getElementById('wdgtFront').style.height);
-	
+function showBackside(event) {	
 	if (window.innerHeight > vSize - 10 || window.innerWidth > hSize || stretcher.isStretched()) {
-		//*** is stretched
-//		alert('is stretched, win = '+ window.innerHeight+' isStretched = '+stretcher.isStretched());
-//		parseInt(document.getElementById('wdgtFront').style.width);
-//		parseInt(document.getElementById('wdgtFront').style.height);
-
-/*	this was my buggy attempt to shrink before flipping to back
-		next time I'll rework Stretcher.js, perhaps add a size to each call to stretch
-		and set a state variable to remember if it's big, medium or little
-		because checking on the fly obviously doesn't work
-	
-		if (window.innerHeight > vSize+15 || window.innerWidth > hSize+15) {
-//			alert('too big')
-			backsideRequested = true;
-			stretcher.minVertPosition = vSize+8;
-			stretcher.stretch(event);
-		} else {
-		//	alert('just right')
-			transitionToBack();
-		}
-*/
-
 		transitionToBack();
 	} else {
-
-//		alert('is not, win = '+ window.innerHeight+' isStretched = '+stretcher.isStretched());
 		backsideRequested = true;
 		tempHeight = stretcher.maxVertPosition;
 		tempWidth = stretcher.maxHorizPosition;
@@ -1039,21 +951,14 @@ function showBackside(event) {
 }
 function getDomainName(url) {
 	return url.replace(/https?:\/\/([^\/]+).+/, "$1").replace('www.', '');
-//	return url.replace(/http[:\/\/([^\/]+).+/, "$1").replace('www.', '');
 
 }
 
 function transitionToBack() {
-	//340x225
 	if (window.widget) {
 		window.widget.prepareForTransition("ToBack");
 	}
-	/* part of buggy shrink before flip
-	stretcher.element.style.height = vSize+8;
-	stretcher.element.style.width = hSize;
-	window.resizeTo(hSize, vSize+8);
-	*/
-	
+
 	document.getElementById('fliprollie').style.display='none';
 	document.getElementById('wdgtFront').style.display='none';
 	document.getElementById('parentDiv').style.display='none';
