@@ -100,29 +100,7 @@ function getAlternateURL(searchTerm, special) {
 }
 
 function loaded() {
-	
-	//alert(getAlternateURL("", true));
-	
-	//ugly hack to disable search history for Safari 3 Beta users
-	saf3 = false;
-	
-	safGrep = widget.system("grep 3.0 /Applications/Safari.app/Contents/version.plist | sed 's/ //g'",null).outputString;
-	webkitGrep = widget.system("grep 522 /System/Library/Frameworks/WebKit.framework/Resources/version.plist | sed 's/ //g'",null).outputString;
-	if (safGrep) {
-		if (safGrep.indexOf('3.0') > -1)
-			saf3 = true;
-	} else if (webkitGrep) {
-		if (webkitGrep.indexOf('522') > -1)
-			saf3 = true;
-	}
-	
-	if (saf3) {
-		document.getElementById('wdgtSearchInputDiv').innerHTML = "<input id='wdgtSearchInput' type='search' size='21' results onSearch='searchWiki(this.value);' />";
-	} else {
-		document.getElementById('wdgtSearchInputDiv').innerHTML = "<input id='wdgtSearchInput' type='search' size='21' autosave='searchHistory' results='10' onSearch='searchWiki(this.value);' />";
-	}
-	//end Safari 3 stuff
-	
+		
 	vSize = 220;
 	hSize = 367;
 	
