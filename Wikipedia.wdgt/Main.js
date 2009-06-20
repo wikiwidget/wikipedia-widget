@@ -40,15 +40,6 @@ var vSize;
 var hSize;
 var commentWindowOpen;
 
-//This 'alternate_wiki' business isn't quite ready for prime time
-// but you're welcome to try it
-
-//use the "Main_Page" (or some other normal page) url
-//var ALTERNATE_WIKI = "http://www.mediawiki.org/wiki/MediaWiki";
-var ALTERNATE_WIKI = '';
-
-//todo: edit links on netnovinar version (search for !spec)
-
 function makeSearchURL(url, search) {
 	if (url.indexOf('index.php/') > -1)
 		url = url.substring(0,url.indexOf("index.php/"));
@@ -70,33 +61,6 @@ function makeStandardURL(url, page) {
 		
 	alert("page is not blank: "+url+page)
 	return url+page;
-}
-
-
-function getAlternateURL(searchTerm, special) {
-	url = ALTERNATE_WIKI;
-
-	if (!url) {
-		alert("getAlternateURL called erroneously");
-		url = "http://en.wikipedia.org/wiki/Main_Page";
-	}
-	if (special)
-		return makeStandardURL(url, searchTerm);		
-	else
-		return makeSearchURL(url, searchTerm);
-		
-	//3 versions:
-	//http://www.marlinpedia.com/index.php?title=Main_Page
-	//http://www.marlinpedia.com/index.php?search=kijij&go=Go
-	
-	//http://wiki.netnovinar.net/index.php/Main_Page
-	//http://wiki.netnovinar.net/index.php/Special:Search?search=hi+mom&go=Go
-	
-	//http://www.mediawiki.org/wiki/Installation
-	//http://www.mediawiki.org/wiki/Special:Search?search=hi+mom&go=Go
-	
-	//http://wiki.illemonati.com/Main_Page
-	//http://wiki.illemonati.com/Special:Search?search=hi+mom&go=Go	
 }
 
 function loaded() {
@@ -194,22 +158,12 @@ function openInBrowser() {
 		if (searchTerm.indexOf('=') < 0 && searchTerm.indexOf('&') < 0) {
 			searchTerm = escape(searchTerm);
 		}
-		if (ALTERNATE_WIKI) {
-			wikiUrl = getAlternateURL(searchTerm);
-		} else {
-			wikiUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Search?search='+searchTerm+'&go=Go';
-		}
-		//alert('wikiurl: '+wikiUrl);
+		wikiUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Search?search='+searchTerm+'&go=Go';
+
 	} else {
-		if (ALTERNATE_WIKI) {
-			wikiUrl = getAlternateURL();
-		} else {
-			wikiUrl = 'http://' + langcode + '.wikipedia.org/wiki/';
-		}
+		wikiUrl = 'http://' + langcode + '.wikipedia.org/wiki/';
 	}
 	if (window.widget) {
-		//wikiUrl = escape(wikiUrl);
-	//	alert(wikiUrl)
 		widget.system("open '"+wikiUrl+"'", null);
 		widget.openURL('');
 	}
@@ -297,12 +251,6 @@ function requestArticle(article) {
 			reqUrl = "http://"+article.lang+".wikipedia.org/w/index.php?title="+searchName;
 		}
 		
-		if (ALTERNATE_WIKI) {
-			//todo: handle 'special' cases on alternate wikis
-			//		image pages are broken on mediawiki.org type install
-			reqUrl = getAlternateURL(searchName);
-		}
-
 		wikiReq = new XMLHttpRequest();
 		wikiReq.onreadystatechange = checkRequestResponse;
 		wikiReq.open("GET", reqUrl, true);
@@ -397,23 +345,7 @@ function processRawHTML(input) {
 	wikiReplace = 'href=\'javascript:searchWiki("$1)\'';
 	output = output.replace(wikiPattern, wikiReplace);
 	
-	if (ALTERNATE_WIKI) {
-		wikiAltPattern = /href=\n*"\/index\.php\/(\S+)\stitle=[^>]+/g;
-		wikiAltReplace = 'href=\'javascript:searchWiki("$1)\'';
-		output = output.replace(wikiAltPattern, wikiAltReplace);
-		
-		wikiAltPattern = /href=\n*"\/index\.php\?title=(\S+)\stitle=[^>]+/g;
-		wikiAltReplace = 'href=\'javascript:searchWiki("$1)\'';
-		output = output.replace(wikiAltPattern, wikiAltReplace);
-	}
-	
-	
-	if (ALTERNATE_WIKI) {
-		//todo: test
-		loginUrl = getAlternateURL("Special:Userlogin", true);
-	} else {
-		loginUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin';		
-	}
+	loginUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin';		
 	
 	loginPattern = 'searchWiki("Special:Userlogin")';
 //	loginReplace = 'openLinkInBrowser("http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin")';
@@ -426,22 +358,10 @@ function processRawHTML(input) {
 	imgReplace = 'href=\'javascript:searchWiki("$1)\'';
 	output = output.replace(imgPattern, imgReplace);
 
-	if (ALTERNATE_WIKI) {
-		imgAltPattern = /href=\n*"\/index\.php\/(\S+)\s/g;
-		imgAltReplace = 'href=\'javascript:searchWiki("$1)\'';
-		output = output.replace(imgAltPattern, imgAltReplace);
-		
-		imgAltPattern = /href=\n*"\/index\.php\?title=(\S+)\s/g;
-		imgAltReplace = 'href=\'javascript:searchWiki("$1)\'';
-		output = output.replace(imgAltPattern, imgAltReplace);
-	}
-
-	//todo: modify this for ALTERNATE_WIKI?
 	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g
 	searchResNumReplace = 'href=\'javascript:searchWiki("$1$2");\'';
 	output = output.replace(searchResNumPattern, searchResNumReplace);
-	
-	//todo: modify this for ALTERNATE_WIKI?
+
 	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g
 	newEditReplace = 'href=\'javascript:searchWiki("$1");\'';
 	output = output.replace(newEditPattern, newEditReplace);
@@ -454,12 +374,8 @@ function processRawHTML(input) {
 	extReplace = 'href=\'javascript:openLinkInBrowser("$1)\'';
 	output = output.replace(extPattern, extReplace);
 	
-	if (ALTERNATE_WIKI)
-		srcUrl = getAlternateURL("", true);
-	else
-		srcUrl = 'http://'+langcode+'.wikipedia.org/';		
+	srcUrl = 'http://'+langcode+'.wikipedia.org/';		
 	
-	//todo: ALTERNATE_WIKI me
 	srcPattern = /src=\n*"\//g;
 	srcReplace = 'src="'+srcUrl;
 	output = output.replace(srcPattern, srcReplace);
@@ -499,10 +415,7 @@ function processRawHTML(input) {
 		document.getElementById('randomLink').src = "Images/randomOff.png";
 	}
 	
-	if (ALTERNATE_WIKI)
-		historyArray[historyPointer].properURL = getAlternateURL(properName.replace(/\s/g, '_'), true);
-	else
-		historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
+	historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
 	
 	output = output.replace(/'/g, "qzq");
 	output = output.replace(/\t/g, " ");
@@ -620,7 +533,6 @@ function processForm(buttonName) {
 	}
 //	alert('postStr: '+postStr)
 	
-	//todo: ALTERNATE_WIKI me
 	formUrl = 'http://'+langcode+'.wikipedia.org'+ f.action;
 	
 	wikiReq = new XMLHttpRequest();
@@ -967,14 +879,6 @@ function transitionToBack() {
 	document.getElementById('randomLink').style.display='none';
 	document.getElementById('wdgtBack').style.display='block';
 
-	if (ALTERNATE_WIKI) {
-		document.getElementById('wikiLogoImg').style.display='none';
-		document.getElementById('wikiLogoAlt').innerHTML = '<a href="javascript:openLinkInBrowser(\''+
-																getAlternateURL("", true)+'\')">'+
-																getDomainName(ALTERNATE_WIKI)+'</a>';
-		alert(document.getElementById('wikiLogoAlt').innerHTML);
-	}
-
 	document.getElementById('languageField').value = langcode;
 	languageFieldDidChange();
 	document.getElementById('cacheField').value = widget.preferenceForKey("CacheAge");
@@ -1148,14 +1052,8 @@ function HistoryObject(name, lang) {
 	} else {
 		this.file = "/Users/"+userName+"/Library/Caches/WikipediaWidget/"+lang+"_"+this.nameForFile+"."+sameNameForFileCount+".html";
 	}
-	if (ALTERNATE_WIKI)
-		//todo: ALTERNATE_WIKI me
-		this.properURL = "http://"+this.lang+".wikipedia.org/wiki/";
-	else
-		this.properURL = "http://"+this.lang+".wikipedia.org/wiki/";
-	
+	this.properURL = "http://"+this.lang+".wikipedia.org/wiki/";	
 	this.contentTop = 0;
-//	alert('this.name: '+this.name);
 }
 function addToHistory(item) {
 		historyPointer++;
