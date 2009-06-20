@@ -5,6 +5,7 @@
 	<script type="text/javascript" src="Scripts/Fader.js"></script>
 	<script type="text/javascript" src="Scripts/Scroller.js"></script>
 	<script type="text/javascript" src="Scripts/Stretcher.js"></script>
+	<script type="text/javascript" src="Scripts/jquery.js"></script>
 	<script type="text/javascript" src="Main.js"></script>
 	<script type="text/javascript" src="localizedStrings.js"></script>
 	<style type="text/css">
@@ -13,9 +14,12 @@
 		@import "wikiCommon.css";
 		@import "widgetStuff.css";
 	</style>
+	<script type="text/javascript" charset="utf-8">
+	   $(loaded);
+	</script>
 </head>
 
-<body onload="loaded();">
+<body>
 
 <div id="wdgtFront" onmousemove="flipper.fadeIn();" onmouseout="flipper.fadeOut();" onmousewheel="mouseWheelMove();">
 	<div id="bottomBarLeft"></div>

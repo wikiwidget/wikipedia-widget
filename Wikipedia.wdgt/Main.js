@@ -251,11 +251,7 @@ function requestArticle(article) {
 			reqUrl = "http://"+article.lang+".wikipedia.org/w/index.php?title="+searchName;
 		}
 		
-		wikiReq = new XMLHttpRequest();
-		wikiReq.onreadystatechange = checkRequestResponse;
-		wikiReq.open("GET", reqUrl, true);
-		wikiReq.setRequestHeader("Cache-Control", "no-cache");
-		wikiReq.send(null);
+		wikiReq = $.get(reqUrl, processRawHTML);
 	}
 }
 
@@ -305,124 +301,106 @@ function processCachedHTML(input) {
 	input = input.replace(/qzq/g, "'");
 	displayContent(input);
 }
-function processRawHTML(input) {
-	var start = 0;
-	var end = 0;
-	resultsIndex = input.indexOf("<div id='results'>");
-	if (resultsIndex > -1) {
-		start = resultsIndex;
-		if (input.indexOf("<form id=\"powersearch\"") > -1) {
-			end = input.indexOf("<form id=\"powersearch\"");
-//			wlinkPattern = /a\shref="\/w\/index.php\?title=Special:Search&amp;search=([^>]+)/g;
-//			wlinkReplace = 'a href=\'javascript:searchWiki("$1)\'';
-//			input = input.replace(wlinkPattern, wlinkReplace);
-		} else if (input.indexOf("<!-- Google search -->") > -1) {
-			end = input.indexOf("<!-- Google search -->");
-		} else {
-			end = input.indexOf("<!-- end content -->");
-		}
+
+function processRawHTML(html) {
+
+	//TODO: handle google search, normal search, and search results
+	
+	/* get the actual page title */
+	/*   stored in a js var, eg:  var wgPageName = "Brad Pitt"; */
+	properName = '';	
+	properNamePattern = /var wgTitle = \"[^\n]+\n/;
+	if(properNameMatch = html.match(properNamePattern)) {
+	 	eval(properNameMatch[0]);
+		properName = wgTitle;
 	} else {
-		if (input.indexOf('nostalgia.css') > 0) {
-			start = input.indexOf('<p>');
-		} else {
-			start = input.indexOf('<h1 class="firstHeading">');
-			if (start < 0) {
-				start = input.indexOf('<h1 class="pagetitle">');
-			}
-		}
-		end = input.indexOf("<!-- end content -->");
-		if (end < 0) {
-			end = input.indexOf('<div class="printfooter">');
-		}
+		/* try to grab it from the html */
+	 	properName = $("#firstHeading", html).text();
+		properName = $.trim(properName);
+		
+		//TODO: does the id name change depending on user-set style preference?
 	}
-	output = input.substring(start, end);
+	if (properName) {
+		document.getElementById('wdgtSearchInput').value = properName;		
+	}
+	if (properName && historyArray[historyPointer].name == "Special:Randompage") {
+	 	resetHistoryObject(properName, langcode);
+	 	document.getElementById('randomLink').src = "Images/randomOff.png";
+		historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
+	}
+	
+	/* restrict ourselves to the contents of the "content" div */
+	html = $("#content", html).html();
 	
 	tocPattern = /a\shref="\#([^"]+)"/g;
 	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
-	output = output.replace(tocPattern, tocReplace);
+	html = html.replace(tocPattern, tocReplace);
 
 	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;
 	wikiReplace = 'href=\'javascript:searchWiki("$1)\'';
-	output = output.replace(wikiPattern, wikiReplace);
+	html = html.replace(wikiPattern, wikiReplace);
 	
 	loginUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin';		
 	
 	loginPattern = 'searchWiki("Special:Userlogin")';
 //	loginReplace = 'openLinkInBrowser("http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin")';
 	loginReplace = 'openLinkInBrowser("'+loginUrl+'")';
-	output = output.replace(loginPattern, loginReplace);
-//	Special:Userlogin
-//	output = output.replace()
+	html = html.replace(loginPattern, loginReplace);
 
 	imgPattern = /href=\n*"\/wiki\/(\S+)/g;
 	imgReplace = 'href=\'javascript:searchWiki("$1)\'';
-	output = output.replace(imgPattern, imgReplace);
+	html = html.replace(imgPattern, imgReplace);
 
 	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g
 	searchResNumReplace = 'href=\'javascript:searchWiki("$1$2");\'';
-	output = output.replace(searchResNumPattern, searchResNumReplace);
+	html = html.replace(searchResNumPattern, searchResNumReplace);
 
 	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g
 	newEditReplace = 'href=\'javascript:searchWiki("$1");\'';
-	output = output.replace(newEditPattern, newEditReplace);
+	html = html.replace(newEditPattern, newEditReplace);
 	
 /*	editPattern = /href=\n*"\/(^>\S+)/g;
 	editReplace = 'href=\'javascript:openLinkInBrowser("http://' + langcode + '.wikipedia.org/$1)\'';
-	output = output.replace(editPattern, editReplace);
+	html = html.replace(editPattern, editReplace);
 */	
 	extPattern = /href=\n*"([^\s>]+)/g;
 	extReplace = 'href=\'javascript:openLinkInBrowser("$1)\'';
-	output = output.replace(extPattern, extReplace);
+	html = html.replace(extPattern, extReplace);
 	
 	srcUrl = 'http://'+langcode+'.wikipedia.org/';		
 	
 	srcPattern = /src=\n*"\//g;
 	srcReplace = 'src="'+srcUrl;
-	output = output.replace(srcPattern, srcReplace);
+	html = html.replace(srcPattern, srcReplace);
 	//"
 	
 	//<div id="jump-to-nav">Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a></div>
 	jumpnavPattern = /<div id="jump-to-nav">[^q]+?<\/div>/;
-	output = output.replace(jumpnavPattern, '');
+	html = html.replace(jumpnavPattern, '');
 	
 	submit1Pattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g;
 	submit1Replace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1")\''
-	output = output.replace(submit1Pattern, submit1Replace);
+	html = html.replace(submit1Pattern, submit1Replace);
 	
 	submit2Pattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g;
 	submit2Replace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2")\''
-	output = output.replace(submit2Pattern, submit2Replace);
+	html = html.replace(submit2Pattern, submit2Replace);
 	
 /*	textareaPattern = /<textarea /g;
 	textareaReplace = '<textarea onmousemove="wiggleScrollBar();" ';
-	output = output.replace(textareaPattern, textareaReplace)*/
+	html = html.replace(textareaPattern, textareaReplace)*/
 	
 //	titlePattern = /title="[^"]+"/g;
-  //  output = output.replace(titlePattern, '');
+  //  html = html.replace(titlePattern, '');
 	
-	displayContent(output);
-	//todo: standard: <h1 class="firstHeading">
-	//		classic:  <h1 class="pagetitle">
-	nameStart = input.indexOf('<h1 class="firstHeading">') + 25;
-	if (nameStart < 25)
-		nameStart = input.indexOf('<h1 class="pagetitle">') + 22;
-	nameEnd = input.indexOf("</h1>");
-	properName = input.substring(nameStart, nameEnd);
-	properName = properName.replace('&amp;', '&');
-	if (historyArray[historyPointer].name == "Special:Randompage") {
-		document.getElementById('wdgtSearchInput').value = properName;
-		resetHistoryObject(properName, langcode);
-		document.getElementById('randomLink').src = "Images/randomOff.png";
-	}
+	displayContent(html);
 	
-	historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
-	
-	output = output.replace(/'/g, "qzq");
-	output = output.replace(/\t/g, " ");
-	output = output.replace(/\n/g, " ");
-	output = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> '+output;
+	html = html.replace(/'/g, "qzq");
+	html = html.replace(/\t/g, " ");
+	html = html.replace(/\n/g, " ");
+	html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> '+html;
 	if (window.widget)
-		widget.system("echo '"+output+"' > "+historyArray[historyPointer].file, emptyFunction);
+		widget.system("echo '"+html+"' > "+historyArray[historyPointer].file, emptyFunction);
 		
 }
 function scrollToAnchor(anchorName) {
