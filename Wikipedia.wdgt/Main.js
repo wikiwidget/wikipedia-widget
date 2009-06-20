@@ -320,10 +320,9 @@ function processRawHTML(html) {
 		
 		//TODO: does the id name change depending on user-set style preference?
 	}
+
 	if (properName) {
-		document.getElementById('wdgtSearchInput').value = properName;		
-	}
-	if (properName && historyArray[historyPointer].name == "Special:Randompage") {
+		document.getElementById('wdgtSearchInput').value = properName;
 	 	resetHistoryObject(properName, langcode);
 	 	document.getElementById('randomLink').src = "Images/randomOff.png";
 		historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
