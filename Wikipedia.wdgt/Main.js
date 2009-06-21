@@ -14,16 +14,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 var langcode;
 var flipper;
-var previousX;
-var previousY;
 var stretcher;
-//TODO: wrap history in object
-var historyArray;
-var historyCount;
-var previousHistoryCount;
-var replacedHistoryItem;
-var historyPointer;
-var lastHistoryAction;
+var historian;
 var userName;
 var progInd;
 var currentInterface;
@@ -34,7 +26,6 @@ var backsideRequested;
 var frontsideRequested;
 var tempHeight;
 var tempWidth;
-var keyPressed;
 var wikiReq;
 var vSize;
 var hSize;
@@ -69,7 +60,9 @@ function loaded() {
 	hSize = 367;
 	
 	flipper = new Fader(document.getElementById('flip'), null, 500);
-	document.getElementById('wdgtContent').innerHTML = "";
+	
+	contentDiv = document.getElementById('wdgtContent');
+	contentDiv.innerHTML = "";
 	
 	scrollerInit(document.getElementById("myScrollBar"), document.getElementById("myScrollTrack"), document.getElementById("myScrollThumb"));
 	
@@ -86,7 +79,7 @@ function loaded() {
 	//(element, minY, maxY, minX, maxX, time)
 	stretcher = new Stretcher(document.getElementById('wdgtFront'), 73, widget.preferenceForKey(createKey("defaultMaxY")), hSize, widget.preferenceForKey(createKey("defaultMaxX")), 250, stretchFinished);
 	
-	calculateAndShowThumb(document.getElementById('wdgtContent'));
+	calculateAndShowThumb(contentDiv);
 	if (window.widget) {
 		widget.system("mkdir ~/Library/Caches/WikipediaWidget", emptyFunction);
 	}
@@ -113,11 +106,65 @@ function loaded() {
 	document.getElementById('commentLabel').innerHTML = getLocalizedString("Comments:");
 	
 	document.getElementById('checkForUpdatesLabel').innerHTML = getLocalizedString("Check for updates:");
+	
+	
+	historian = {
 		
+		items: [],
+		pointer: -1,
+		
+		currentItem: function() {
+			if (this.items.length == 0)
+				return null;
+			return this.items[this.pointer];
+		},
+		
+		add: function (item) {
+			this.pointer++;
+			this.items[this.pointer] = item;
+			/* chop off everything after the item we just inserted */
+			this.items.splice(this.pointer+1)
+			
+			disableForwardButton();
+			if (! this.atStart()) {
+				enableBackButton();
+			}
+		},
+		
+		rememberCurrentContentTop: function() {
+			if (this.items.length > 0)
+				this.currentItem().contentTop = getContentTop();
+		},
+		
+		atStart: function() { return this.pointer == 0 },
+		atEnd: function() { return this.pointer == this.items.length - 1 },
+		
+		goBack: function() {
+			if (! this.atStart()) {
+				this.currentItem().contentTop = getContentTop();
+				this.pointer--;
+				searchWiki(this.currentItem().name, true);
+				enableForwardButton();
+				if (this.atStart()) {
+					disableBackButton();
+				}				
+			}
+		},
+		goForward: function () {
+			if (! this.atEnd()) {
+				this.currentItem().contentTop = getContentTop();
+				this.pointer++;
+				searchWiki(this.currentItem().name, true);
+				enableBackButton();
+				if (this.atEnd())
+					disableForwardButton();
+			}
+		}
+	};
+	historian.items.push(1);
+	
 	progInd = new ProgressIndicator(document.getElementById('progressGraphic'), "Images/prog");
-	historyArray = new Array();
-	historyCount = 0;
-	historyPointer = 0;
+
 	if (window.widget) {
 		userName = widget.system("echo $USER", null).outputString.replace(/\n/, '');
 	}
@@ -180,10 +227,8 @@ function searchWiki(search, isHistoryRequest) {
 	if (isHistoryRequest == undefined) {
 		isHistoryRequest = false;
 	}
-		
-	if (historyCount > 0) {
-		rememberCurrentContentTop();
-	}
+	
+	//historian.rememberCurrentContentTop();
 	
 	search = unescape(search);
 	document.getElementById('wdgtSearchInput').value = search.replace(/_/g, ' ');
@@ -193,7 +238,7 @@ function searchWiki(search, isHistoryRequest) {
 		widget.system("find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", null);
 	}
 	
-	req = new XMLHttpRequest();
+	var req = new XMLHttpRequest();
 	req.open("GET", filePathForArticleName(search), false);
 	//TODO: if history object is created with properName, and the file is named after properName, then subsequent searches for
 	//  something like "duluth mn" won't use the cached file, but will repeatedly write more cached files
@@ -201,9 +246,11 @@ function searchWiki(search, isHistoryRequest) {
 	response = req.responseText;
 	req = null;
 	
-	content = '';
 	if (response != null && response.length > 200) {
-		content = processCachedHTML(response);
+		displayContent(decodeURI(response));
+		if (! isHistoryRequest) {
+			historian.add(new HistoryObject(search, langcode));
+		}
 	} else {
 		progInd.start();
 		
@@ -227,7 +274,7 @@ function searchWiki(search, isHistoryRequest) {
 
 		// TODO: if isHistoryRequest, use <current hist object>.lang
 		if (!specPage) {
-				reqUrl = "http://"+langcode+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
+			reqUrl = "http://"+langcode+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
 		} else {
 			reqUrl = "http://"+langcode+".wikipedia.org/w/index.php?title="+searchName;
 		}
@@ -241,15 +288,12 @@ function searchWiki(search, isHistoryRequest) {
 			html = processRawHTML(html);
 			displayContent(html);
 			if (! isHistoryRequest) {
-				var article = new HistoryObject(search, langcode);
-				addToHistory(article);
-				//TODO: this:
-				html = html.replace(/'/g, "qzq");
-				html = html.replace(/\t/g, " ");
-				html = html.replace(/\n/g, " ");
-				html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> '+html;
-				if (window.widget)
-					widget.system("echo '"+html+"' > "+historyArray[historyPointer].file, emptyFunction);
+				historian.add(new HistoryObject(articleName, langcode));
+				if (window.widget) {
+					catCmd = widget.system("/bin/cat > "+historian.currentItem().file, function(object){});
+					catCmd.write(encodeURI(html));
+					catCmd.close();
+				}
 			}
 		});
 		
@@ -282,13 +326,15 @@ function filePathForArticleName(name) {
 	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
 	//alert(this.nameForFile);
 	sameNameForFileCount = 0;
-	if (historyArray.length > 0) {
-		for (i=1; i<historyArray.length; i++) {
-			if (historyArray[i].nameForFile.toLowerCase() == nameForFile.toLowerCase()) {
-				sameNameForFileCount++;
-			}
-		}
-	}
+
+	//TODO: this:
+	// if (historyArray.length > 0) {
+	// 	for (i=1; i<historyArray.length; i++) {
+	// 		if (historyArray[i].nameForFile.toLowerCase() == nameForFile.toLowerCase()) {
+	// 			sameNameForFileCount++;
+	// 		}
+	// 	}
+	// }
 	path = "/Users/"+userName+"/Library/Caches/WikipediaWidget/"+langcode+"_"+nameForFile;
 	if (sameNameForFileCount > 0)
 		path += '_'+sameNameForFileCount;
@@ -300,32 +346,13 @@ function cancelArticleRequest() {
 	//todo: this causes a history error (TypeError - Undefined value (line: 799)) on next article request
 	wikiReq.abort();
 	progInd.stop();
-	if (historyPointer == historyCount) {
-	//	alert('histPoint == histCount');
-		removeCurrentItemFromHistory();
-	} else {
-		if (lastHistoryAction == 'back') {
-			historyPointer++;
-			setSearchValue(historyArray[historyPointer].name);
-			enableBackButton();
-			if (historyPointer == historyCount) {
-				disableForwardButton();
-			}
-		} else {
-			if (historyPointer > 1) {
-				historyPointer--;
-				setSearchValue(historyArray[historyPointer].name);
-				enableForwardButton();
-				if (historyPointer == 1) {
-					disableBackButton();
-				}
-			}
-		}
-	}
+	
+	//TODO: if this is used... roll back last history action (if there was one)
+	
 	if (stretcher.isStretched() == false) {
 		setSearchValue('');
 	} else {
-		setSearchValue(historyArray[historyPointer].name);
+		setSearchValue(historian.currentItem().name);
 	}
 }
 
@@ -444,6 +471,16 @@ function collapseWidget() {
 	document.getElementById('fontSizeBigger').innerHTML = '';
 }
 
+function getContentTop() {
+	var currentContentStyle = document.defaultView.getComputedStyle(contentDiv,"");
+	var top = parseInt(currentContentStyle.getPropertyValue("top"));
+	if (isNaN(top)) {
+		top = 0;
+	}
+	return top;
+	
+}
+
 function displayContent(input) {
 
 	if (stretcher.isStretched() == false && input.length > 0) {
@@ -452,18 +489,19 @@ function displayContent(input) {
 		document.getElementById('editButton').innerHTML = '✍';
 		document.getElementById('fontSizeSmaller').innerHTML = 'A';
 		document.getElementById('fontSizeBigger').innerHTML = 'A';
-		document.getElementById('editButton').onclick = function() { searchWiki(historyArray[historyPointer].name + '&action=edit') }
+		document.getElementById('editButton').onclick = function() { searchWiki(historian.currentItem().name + '&action=edit') }
 		stretcher.stretch(event);
 	}
 	
 	progInd.stop();
-	document.getElementById('wdgtContent').innerHTML = input;
-	calculateAndShowThumb(document.getElementById('wdgtContent'));
-	calculateAndShowThumb(document.getElementById('wdgtContent'));
+	contentDiv.innerHTML = input;
+	calculateAndShowThumb(contentDiv);
+	//TODO: this
+	// calculateAndShowThumb(contentDiv);
 	scrollBy(55000);
-	if (historyArray[historyPointer]) {
-		scrollBy(historyArray[historyPointer].contentTop);
-	}
+	// if (historyArray[historyPointer]) {
+	// 	scrollBy(historyArray[historyPointer].contentTop);
+	// }
 	if (document.getElementById('wdgtSearchInput').value.indexOf("#") > 0) {
 		anchorPattern = /(\w+)#/g;
 		anchor = document.getElementById('wdgtSearchInput').value.replace(/\s/g, '_').replace(anchorPattern, "");
@@ -594,7 +632,7 @@ function stretchFinished() {
 		frontsideRequested = false;
 		stretcher.minVertPosition = 73;
 	}
-	calculateAndShowThumb(document.getElementById('wdgtContent'));
+	calculateAndShowThumb(contentDiv);
 }
 function setDefaultMaxSize(x, y) {
 //	alert('setDefaultSize, x: '+x+' y: '+y)
@@ -1017,6 +1055,7 @@ function changeInterface(input) {
 function copyProperURL() {
 	if (window.widget) {
 		//todo: escape proper name, rather than encoding url
+		//TODO: new history; check if this still works
 		var copyCommand = "/usr/bin/osascript -e 'set the clipboard to \""+encodeURI(historyArray[historyPointer].properURL)+"\" as string'";
 		widget.system(copyCommand, null);
 	}
@@ -1031,13 +1070,13 @@ function HistoryObject(name, lang) {
 	this.nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
 	//alert(this.nameForFile);
 	sameNameForFileCount = 0;
-	if (historyArray.length > 0) {
-		for (i=1; i<historyArray.length; i++) {
-			if (historyArray[i].nameForFile.toLowerCase() == this.nameForFile.toLowerCase()) {
-				sameNameForFileCount++;
-			}
-		}
-	}
+	// if (historyArray.length > 0) {
+	// 	for (i=1; i<historyArray.length; i++) {
+	// 		if (historyArray[i].nameForFile.toLowerCase() == this.nameForFile.toLowerCase()) {
+	// 			sameNameForFileCount++;
+	// 		}
+	// 	}
+	// }
 	if (sameNameForFileCount == 0) {
 		this.file = "/Users/"+userName+"/Library/Caches/WikipediaWidget/"+lang+"_"+this.nameForFile+".html";
 	} else {
@@ -1046,65 +1085,7 @@ function HistoryObject(name, lang) {
 	this.properURL = "http://"+this.lang+".wikipedia.org/wiki/";	
 	this.contentTop = 0;
 }
-function addToHistory(item) {
-		historyPointer++;
-		replacedHistoryItem = historyArray[historyPointer];
-		historyArray[historyPointer] = item;
-		/*  This screws up cancelArticleRequest
-		for (i = historyPointer+1; i < historyCount; i++) {
-			historyArray[i] = null;
-		}*/
-		previousHistoryCount = historyCount;
-		historyCount = historyPointer;
-		disableForwardButton();
-		if (historyPointer > 1) {
-			enableBackButton();
-		}
-}
-function removeCurrentItemFromHistory() {
-		historyArray[historyPointer] = replacedHistoryItem;
-		
-		historyCount = previousHistoryCount;
-		historyPointer--;
-		if (historyPointer < historyCount) {
-			enableForwardButton();
-		}
-		if (historyPointer == 1) {
-			disableBackButton();
-		}
-}
 
-function resetHistoryObject(name, lang) {
-	historyArray[historyPointer] = new HistoryObject(name, lang);
-}
-
-function rememberCurrentContentTop() {
-	historyArray[historyPointer].contentTop = currentContentTop;
-}
-function goBackInHistory() {
-	if (historyPointer > 1) {
-		rememberCurrentContentTop();
-		historyPointer--;
-		searchWiki(historyArray[historyPointer].name, true);
-		enableForwardButton();
-		if (historyPointer == 1) {
-			disableBackButton();
-		}
-		lastHistoryAction = 'back';
-	}
-}
-function goForwardInHistory() {
-	if (historyPointer < historyCount) {
-		rememberCurrentContentTop();
-		historyPointer++;
-		searchWiki(historyArray[historyPointer].name);
-		enableBackButton();
-		if (historyPointer == historyCount) {
-			disableForwardButton();
-		}
-		lastHistoryAction = 'forward';
-	}
-}
 
 function enableBackButton() {
 	document.getElementById('backButton').src = "Images/backButtonOn.png";
@@ -1153,7 +1134,7 @@ function mouseMove(event)
 	document.getElementById('wdgtFront').style.width = parseInt(document.getElementById('wdgtFront').style.width) + deltaX;
 	document.getElementById('wdgtFront').style.height = parseInt(document.getElementById('wdgtFront').style.height) + deltaY;
 	window.resizeBy(deltaX, deltaY);
-	calculateAndShowThumb(document.getElementById('wdgtContent'));
+	calculateAndShowThumb(contentDiv);
 	event.stopPropagation();
 	event.preventDefault();
 } 

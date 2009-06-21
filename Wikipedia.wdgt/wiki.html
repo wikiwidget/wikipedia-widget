@@ -36,8 +36,8 @@
 	<div id='wdgtSearchInputDiv'>
 		<input id='wdgtSearchInput' type='search' size='21' autosave='searchHistory' results='10' onSearch='searchWiki(this.value);' />
 	</div>
-	<img id="backButton" src="Images/backButtonOff.png" onmousedown="goBackInHistory();"></img>
-	<img id="forwardButton" src="Images/forwardButtonOff.png" onmousedown="goForwardInHistory();"></img>
+	<img id="backButton" src="Images/backButtonOff.png" onmousedown="historian.goBack();"></img>
+	<img id="forwardButton" src="Images/forwardButtonOff.png" onmousedown="historian.goForward();"></img>
 
 	<img id="randomLink" src="Images/randomOff.png" onmouseover='document.getElementById("randomLink").src = "Images/randomOn.png";' onmouseout='document.getElementById("randomLink").src = "Images/randomOff.png";' onmousedown="searchWiki('Special:Randompage');"></img>
 	
