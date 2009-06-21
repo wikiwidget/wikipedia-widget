@@ -169,69 +169,50 @@ function openInBrowser() {
 	}
 }
 
-function searchWiki(search) {
+function searchWiki(search, isHistoryRequest) {
+	if (search.length < 1) {
+		collapseWidget();
+		displayContent('');
+		document.getElementById('wdgtSearchInput').value = "";
+		return;
+	}
+	
+	if (isHistoryRequest == undefined) {
+		isHistoryRequest = false;
+	}
+		
+	if (historyCount > 0) {
+		rememberCurrentContentTop();
+	}
+	
 	search = unescape(search);
 	document.getElementById('wdgtSearchInput').value = search.replace(/_/g, ' ');
-	if (search.length < 1) {
-		displayContent('collapse');
-		document.getElementById('wdgtSearchInput').value = "";
-		//TODO: check for x button click
-		//if (historyPointer == historyCount) {
-		//	historyPointer++;
-		//}
-	} else {
-		//TODO: if lancode is en, find/replace unicode characters?
-		if (historyCount > 0) {
-			rememberCurrentContentTop();
-		}
-		//TODO: upon history object creation, check if cache file name exists (in dir or in other history objects?), if so, modify file name
-		var article = new HistoryObject(search, langcode);
-		addToHistory(article);
-		openArticle(article);
-	}
-}
-
-function openArticle(article) {
-	setSearchValue(article.name);
+	
+	/* delete old cached files */
 	if (window.widget) {
 		widget.system("find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", null);
 	}
-		
+	
 	req = new XMLHttpRequest();
-	req.open("GET", article.file, false);
+	req.open("GET", filePathForArticleName(search), false);
+	//TODO: if history object is created with properName, and the file is named after properName, then subsequent searches for
+	//  something like "duluth mn" won't use the cached file, but will repeatedly write more cached files
 	req.send(null);
 	response = req.responseText;
 	req = null;
-
-	if (response == null || response.length < 200) {
-		progInd.start();
-		requestArticle(article);
-	} else {
-		if (response.indexOf('<head>') > 0) {
-			processRawHTML(response);
-		} else {
-			processCachedHTML(response);
-		}
-	}
 	
-}
-function requestArticle(article) {
-	if (langcode.length < 2) {
-		output = "<p>"+getLocalizedString("<b>Please enter a Wikipedia language code</b> in the preference panel of this widget.  These are the letters (usually 2, sometimes 3 or more) found in the Wikipedia URL for your language: htt://XX.wikipedia.org, where XX is the language code.  Here are some common codes:") + "</p><ul><li>English - en</li><li>Deutsch - de</li><li>日本語 - ja</li><li>Français - fr</li><li>Svenska - sv</li><li>Polski - pl</li><li>Nederlands - nl</li><li>Español - es</li><li>Italiano - it</li><li>Português - pt</li><li>Simple English - simple</ul>";
-		displayContent(output);
+	content = '';
+	if (response != null && response.length > 200) {
+		content = processCachedHTML(response);
 	} else {
-		var l = article.lang;
-		searchName = article.name;
-		searchName = searchName.replace(/_/g, '+'); //.replace(/&/g, "%26")
+		progInd.start();
+		
+		searchName = search.replace(/_/g, '+').replace(/ /g, '+'); //.replace(/&/g, "%26")
 		
 		var specPage = false;
-		
 		if (searchName.indexOf('=')>0 && searchName.indexOf('&')>0) {
 			specPage = true;
 		}
-		
-
-		
 		imageWords = new Array('Image:', '画像:','Bild:','Afbeelding:','Immagine:','Grafika:','Imagen:','Imagem:','תמונה:','Billede:');
 		for (i=0;i<imageWords.length;i++) {
 			if (!specPage) {
@@ -240,28 +221,79 @@ function requestArticle(article) {
 				}
 			}
 		}
-
 		if (searchName.indexOf('&fulltext=Search') > -1) {
 			specPage = false;
 		}
 
+		// TODO: if isHistoryRequest, use <current hist object>.lang
 		if (!specPage) {
-				reqUrl = "http://"+article.lang+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
+				reqUrl = "http://"+langcode+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
 		} else {
-			reqUrl = "http://"+article.lang+".wikipedia.org/w/index.php?title="+searchName;
+			reqUrl = "http://"+langcode+".wikipedia.org/w/index.php?title="+searchName;
 		}
 		
-		wikiReq = $.get(reqUrl, processRawHTML);
+		wikiReq = $.get(reqUrl, function(html) {
+			if (articleName = properNameFromHTML(html)) {
+				document.getElementById('wdgtSearchInput').value = articleName;
+			} else {
+				articleName = search;
+			}
+			html = processRawHTML(html);
+			displayContent(html);
+			if (! isHistoryRequest) {
+				var article = new HistoryObject(search, langcode);
+				addToHistory(article);
+				//TODO: this:
+				html = html.replace(/'/g, "qzq");
+				html = html.replace(/\t/g, " ");
+				html = html.replace(/\n/g, " ");
+				html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> '+html;
+				if (window.widget)
+					widget.system("echo '"+html+"' > "+historyArray[historyPointer].file, emptyFunction);
+			}
+		});
+		
+	//TODO: make sure langcode always has a legitimate value
+
 	}
+	
+	//TODO: put this stuff somewhere
+	// if (properName) {
+	//  	resetHistoryObject(properName, langcode);
+	//  	document.getElementById('randomLink').src = "Images/randomOff.png";
+	// 	historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
+	// }
+	
+	
+	// if none, pull from wiki
+	// get proper name
+	// process raw html
+	// display
+	// if (! isHistoryRequest) add item to history
+	
+	
+	
+	//TODO: upon history object creation, check if cache file name exists (in dir or in other history objects?), if so, modify file name
 }
 
-function checkRequestResponse() {
-	if (wikiReq.readyState == 4) {
-		if (wikiReq.status == 200) {
-			response = wikiReq.responseText;
-			processRawHTML(response);
-		} //todo: add else { display error
+function filePathForArticleName(name) {
+	//TODO: clean me
+	
+	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
+	//alert(this.nameForFile);
+	sameNameForFileCount = 0;
+	if (historyArray.length > 0) {
+		for (i=1; i<historyArray.length; i++) {
+			if (historyArray[i].nameForFile.toLowerCase() == nameForFile.toLowerCase()) {
+				sameNameForFileCount++;
+			}
+		}
 	}
+	path = "/Users/"+userName+"/Library/Caches/WikipediaWidget/"+langcode+"_"+nameForFile;
+	if (sameNameForFileCount > 0)
+		path += '_'+sameNameForFileCount;
+	path += '.html';
+	return path;
 }
 
 function cancelArticleRequest() {
@@ -299,13 +331,9 @@ function cancelArticleRequest() {
 
 function processCachedHTML(input) {
 	input = input.replace(/qzq/g, "'");
-	displayContent(input);
+	return input;
 }
-
-function processRawHTML(html) {
-
-	//TODO: handle google search, normal search, and search results
-	
+function properNameFromHTML(html) {
 	/* get the actual page title */
 	/*   stored in a js var, eg:  var wgPageName = "Brad Pitt"; */
 	properName = '';	
@@ -315,18 +343,19 @@ function processRawHTML(html) {
 		properName = wgTitle;
 	} else {
 		/* try to grab it from the html */
-	 	properName = $("#firstHeading", html).text();
+	 	properName = $("#firstHeading", html).text();  //TODO: could be undefined
 		properName = $.trim(properName);
 		
 		//TODO: does the id name change depending on user-set style preference?
 	}
+	
+	return properName;
+	
+	
+}
+function processRawHTML(html) {
 
-	if (properName) {
-		document.getElementById('wdgtSearchInput').value = properName;
-	 	resetHistoryObject(properName, langcode);
-	 	document.getElementById('randomLink').src = "Images/randomOff.png";
-		historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
-	}
+	//TODO: handle google search, normal search, and search results
 	
 	/* restrict ourselves to the contents of the "content" div */
 	html = $("#content", html).html();
@@ -392,14 +421,8 @@ function processRawHTML(html) {
 //	titlePattern = /title="[^"]+"/g;
   //  html = html.replace(titlePattern, '');
 	
-	displayContent(html);
+	return html;
 	
-	html = html.replace(/'/g, "qzq");
-	html = html.replace(/\t/g, " ");
-	html = html.replace(/\n/g, " ");
-	html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> '+html;
-	if (window.widget)
-		widget.system("echo '"+html+"' > "+historyArray[historyPointer].file, emptyFunction);
 		
 }
 function scrollToAnchor(anchorName) {
@@ -410,24 +433,20 @@ function scrollToAnchor(anchorName) {
 	scrollBy(-anchorPosition);
 }
 
+function collapseWidget() {
+	if (stretcher.isStretched() == true) {
+		document.getElementById('ResizeBox').style.display = "none";
+		stretcher.stretch(event);
+	}
+	document.getElementById('editButton').style.display = "none";
+	document.getElementById('editButton').innerHTML = '';
+	document.getElementById('fontSizeSmaller').innerHTML = '';
+	document.getElementById('fontSizeBigger').innerHTML = '';
+}
 
 function displayContent(input) {
-	if (input == "collapse") {
-		input = "";
-		
-		if (stretcher.isStretched() == true) {
-			document.getElementById('ResizeBox').style.display = "none";
-			stretcher.stretch(event);
-		}
-		document.getElementById('editButton').style.display = "none";
-		document.getElementById('editButton').innerHTML = '';
-		document.getElementById('fontSizeSmaller').innerHTML = '';
-		document.getElementById('fontSizeBigger').innerHTML = '';
-		//todo: why does this not work? ^
-//		document.getElementById('editButton').style.opacity = "0";
-//		document.getElementById('editButton').style.fontSize = "1px";
-		
-	} else if (stretcher.isStretched() == false) {
+
+	if (stretcher.isStretched() == false && input.length > 0) {
 		document.getElementById('ResizeBox').style.display = "block";
 		document.getElementById('editButton').style.display = 'block';
 		document.getElementById('editButton').innerHTML = '✍';
@@ -440,11 +459,6 @@ function displayContent(input) {
 	progInd.stop();
 	document.getElementById('wdgtContent').innerHTML = input;
 	calculateAndShowThumb(document.getElementById('wdgtContent'));
-	if (historyCount > 0) {
-	//	alert('histCount > 0')
-		document.getElementById('wdgtSearchInput').value = historyArray[historyPointer].name.replace(/_/g, ' ');
-		
-	}	
 	calculateAndShowThumb(document.getElementById('wdgtContent'));
 	scrollBy(55000);
 	if (historyArray[historyPointer]) {
@@ -1071,8 +1085,7 @@ function goBackInHistory() {
 	if (historyPointer > 1) {
 		rememberCurrentContentTop();
 		historyPointer--;
-		openArticle(historyArray[historyPointer]);
-		setSearchValue(historyArray[historyPointer].name);
+		searchWiki(historyArray[historyPointer].name, true);
 		enableForwardButton();
 		if (historyPointer == 1) {
 			disableBackButton();
@@ -1084,8 +1097,7 @@ function goForwardInHistory() {
 	if (historyPointer < historyCount) {
 		rememberCurrentContentTop();
 		historyPointer++;
-		openArticle(historyArray[historyPointer]);
-		setSearchValue(historyArray[historyPointer].name);
+		searchWiki(historyArray[historyPointer].name);
 		enableBackButton();
 		if (historyPointer == historyCount) {
 			disableForwardButton();
