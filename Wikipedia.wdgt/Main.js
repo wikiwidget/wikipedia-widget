@@ -144,6 +144,7 @@ function loaded() {
 				this.currentItem().contentTop = getContentTop();
 				this.pointer--;
 				searchWiki(this.currentItem().name, true);
+				scrollBy(this.currentItem().contentTop);
 				enableForwardButton();
 				if (this.atStart()) {
 					disableBackButton();
@@ -155,13 +156,13 @@ function loaded() {
 				this.currentItem().contentTop = getContentTop();
 				this.pointer++;
 				searchWiki(this.currentItem().name, true);
+				scrollBy(this.currentItem().contentTop);
 				enableBackButton();
 				if (this.atEnd())
 					disableForwardButton();
 			}
 		}
 	};
-	historian.items.push(1);
 	
 	progInd = new ProgressIndicator(document.getElementById('progressGraphic'), "Images/prog");
 
@@ -226,10 +227,9 @@ function searchWiki(search, isHistoryRequest) {
 	
 	if (isHistoryRequest == undefined) {
 		isHistoryRequest = false;
+		historian.rememberCurrentContentTop();
 	}
-	
-	//historian.rememberCurrentContentTop();
-	
+		
 	search = unescape(search);
 	document.getElementById('wdgtSearchInput').value = search.replace(/_/g, ' ');
 	
@@ -298,26 +298,7 @@ function searchWiki(search, isHistoryRequest) {
 		});
 		
 	//TODO: make sure langcode always has a legitimate value
-
 	}
-	
-	//TODO: put this stuff somewhere
-	// if (properName) {
-	//  	resetHistoryObject(properName, langcode);
-	//  	document.getElementById('randomLink').src = "Images/randomOff.png";
-	// 	historyArray[historyPointer].properURL = "http://"+historyArray[historyPointer].lang+".wikipedia.org/wiki/"+properName.replace(/\s/g, '_');
-	// }
-	
-	
-	// if none, pull from wiki
-	// get proper name
-	// process raw html
-	// display
-	// if (! isHistoryRequest) add item to history
-	
-	
-	
-	//TODO: upon history object creation, check if cache file name exists (in dir or in other history objects?), if so, modify file name
 }
 
 function filePathForArticleName(name) {
@@ -343,7 +324,6 @@ function filePathForArticleName(name) {
 }
 
 function cancelArticleRequest() {
-	//todo: this causes a history error (TypeError - Undefined value (line: 799)) on next article request
 	wikiReq.abort();
 	progInd.stop();
 	
@@ -496,12 +476,8 @@ function displayContent(input) {
 	progInd.stop();
 	contentDiv.innerHTML = input;
 	calculateAndShowThumb(contentDiv);
-	//TODO: this
-	// calculateAndShowThumb(contentDiv);
-	scrollBy(55000);
-	// if (historyArray[historyPointer]) {
-	// 	scrollBy(historyArray[historyPointer].contentTop);
-	// }
+	scrollBy(100000); /* scroll to the top */
+	
 	if (document.getElementById('wdgtSearchInput').value.indexOf("#") > 0) {
 		anchorPattern = /(\w+)#/g;
 		anchor = document.getElementById('wdgtSearchInput').value.replace(/\s/g, '_').replace(anchorPattern, "");
