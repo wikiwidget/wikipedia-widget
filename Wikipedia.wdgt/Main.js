@@ -280,7 +280,8 @@ function searchWiki(search, isHistoryRequest) {
 		}
 		
 		wikiReq = $.get(reqUrl, function(html) {
-			if (articleName = properNameFromHTML(html)) {
+			var isNotEditPage = searchName.indexOf('&action=edit') == -1;
+			if (isNotEditPage && (articleName = properNameFromHTML(html))) {
 				document.getElementById('wdgtSearchInput').value = articleName;
 			} else {
 				articleName = search;
@@ -342,12 +343,12 @@ function processCachedHTML(input) {
 }
 function properNameFromHTML(html) {
 	/* get the actual page title */
-	/*   stored in a js var, eg:  var wgPageName = "Brad Pitt"; */
+	/*   stored in a js var, eg:  var wgPageName = "Brad_Pitt"; */
 	properName = '';	
-	properNamePattern = /var wgTitle = \"[^\n]+\n/;
+	properNamePattern = /var wgPageName = \"[^\n]+\n/;
 	if(properNameMatch = html.match(properNamePattern)) {
 	 	eval(properNameMatch[0]);
-		properName = wgTitle;
+		properName = wgPageName;
 	} else {
 		/* try to grab it from the html */
 	 	properName = $("#firstHeading", html).text();  //TODO: could be undefined
@@ -356,7 +357,7 @@ function properNameFromHTML(html) {
 		//TODO: does the id name change depending on user-set style preference?
 	}
 	
-	return properName;
+	return properName.replace(/_/g, ' ')
 	
 	
 }
