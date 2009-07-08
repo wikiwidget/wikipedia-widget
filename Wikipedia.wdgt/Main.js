@@ -279,12 +279,33 @@ function searchWiki(search, isHistoryRequest) {
 			reqUrl = "http://"+langcode+".wikipedia.org/w/index.php?title="+searchName;
 		}
 		
-		wikiReq = $.get(reqUrl, function(html) {
+		wikiReq = new XMLHttpRequest();
+		wikiReq.onreadystatechange = function(){ checkRequestResponse(wikiReq, searchName, isHistoryRequest) };
+		wikiReq.open("GET", reqUrl, true);
+		// wikiReq.setRequestHeader("Cookie", "enwiki_session=5390927eaa86dfd3e775fd93426ecd50;");
+		wikiReq.setRequestHeader("Cache-Control", "no-cache");
+		wikiReq.send(null);
+		
+	//TODO: make sure langcode always has a legitimate value
+	}
+}
+
+function checkRequestResponse(req, searchName, isHistoryRequest) {
+	//alert('readyState: '+req.readyState);
+	if (req.readyState == 4) {		
+		if(req.getResponseHeader("Set-Cookie")) {
+			var cookies = req.getResponseHeader("Set-Cookie");
+			alert(cookies);
+		}
+		if (req.status == 200) {
+			alert("req status 200")
+			var html = req.responseText;
 			var isNotEditPage = searchName.indexOf('&action=edit') == -1;
+			var articleName;
 			if (isNotEditPage && (articleName = properNameFromHTML(html))) {
 				document.getElementById('wdgtSearchInput').value = articleName;
 			} else {
-				articleName = search;
+				articleName = searchName;
 			}
 			html = processRawHTML(html);
 			displayContent(html);
@@ -296,9 +317,7 @@ function searchWiki(search, isHistoryRequest) {
 					catCmd.close();
 				}
 			}
-		});
-		
-	//TODO: make sure langcode always has a legitimate value
+		}
 	}
 }
 
@@ -337,10 +356,6 @@ function cancelArticleRequest() {
 	}
 }
 
-function processCachedHTML(input) {
-	input = input.replace(/qzq/g, "'");
-	return input;
-}
 function properNameFromHTML(html) {
 	/* get the actual page title */
 	/*   stored in a js var, eg:  var wgPageName = "Brad_Pitt"; */
@@ -541,11 +556,12 @@ function processForm(buttonName) {
 	
 	formUrl = 'http://'+langcode+'.wikipedia.org'+ f.action;
 	
-	wikiReq = new XMLHttpRequest();
-	wikiReq.onreadystatechange = checkRequestResponse;
-	wikiReq.open("POST", formUrl, false);	
-	wikiReq.setRequestHeader("Cache-Control", "no-cache");
-	wikiReq.send(postStr);
+	req = new XMLHttpRequest();
+	req.onreadystatechange = function(){ checkRequestResponse(req, '', false) };
+	req.open("POST", formUrl, false);
+	req.setRequestHeader("Cookie", "enwiki_session=5390927eaa86dfd3e775fd93426ecd50;");
+	req.setRequestHeader("Cache-Control", "no-cache");
+	req.send(postStr);
 }
 
 //this following function is taken from http://en.wikipedia.org/skins-1.5/common/wikibits.js?1
