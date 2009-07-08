@@ -16,6 +16,7 @@ var langcode;
 var flipper;
 var stretcher;
 var historian;
+var cookieMonster;
 var userName;
 var progInd;
 var currentInterface;
@@ -164,6 +165,31 @@ function loaded() {
 		}
 	};
 	
+	cookieMonster = {
+		cookies: {},
+		store: function(cstr) {
+			var matches;
+			var re = new RegExp("([\\w]+?)wiki_session=[^;]+");
+			if (matches = cstr.match(re)) {
+				var sess = matches[0] + ';';
+				var lang = matches[1];
+				this.cookies[lang] = sess;
+				alert('storing '+sess);
+				return true;
+			}
+			return false;
+		},
+
+		fetch: function(lang) {
+			if (lang in this.cookies) {
+				alert('fetching '+this.cookies[lang]);
+				return this.cookies[lang];
+			}
+			return '';
+		}
+	};
+	
+	
 	progInd = new ProgressIndicator(document.getElementById('progressGraphic'), "Images/prog");
 
 	if (window.widget) {
@@ -282,23 +308,83 @@ function searchWiki(search, isHistoryRequest) {
 		wikiReq = new XMLHttpRequest();
 		wikiReq.onreadystatechange = function(){ checkRequestResponse(wikiReq, searchName, isHistoryRequest) };
 		wikiReq.open("GET", reqUrl, true);
-		// wikiReq.setRequestHeader("Cookie", "enwiki_session=5390927eaa86dfd3e775fd93426ecd50;");
 		wikiReq.setRequestHeader("Cache-Control", "no-cache");
+		var cookiestr = cookieMonster.fetch(langcode);
+		if (cookiestr) {
+			alert('get page sending cookie: '+cookiestr);
+			wikiReq.setRequestHeader("Cookie", cookiestr);
+		} else {
+			alert('get page sending no cookie');
+		}
 		wikiReq.send(null);
 		
 	//TODO: make sure langcode always has a legitimate value
 	}
 }
+function processForm(buttonName) {
+	//alert('called by: '+buttonName);
+	f = window.document.forms[0];
+	var postStr = '';
+	for (var i=0; i<f.length; i++) {
+
+		e = f.elements[i];
+		switch (e.type) {
+			case ('submit'):
+				if (e.name == buttonName) {
+					if (i>0) { postStr += '&'; }
+					postStr += e.name+'='+e.value.replace(' ','+');
+				}
+				break;
+			case ('checkbox'):
+				if (e.checked) {
+					if (i>0) { postStr += '&'; }
+					postStr += e.name+'='+e.value;
+				}
+				break;
+			case ('hidden'):
+				// NLS: encode edit tag, could store edit tag but not worth trouble.
+				// http://en.wikipedia.org/wiki/Wikipedia:Creating_a_bot#Edit_tokens
+				if (i>0) { postStr += '&'; }
+				postStr += e.name+'='+encodeURIComponent(e.value)
+				break;
+			case ('textarea'):
+				if (i>0) { postStr += '&'; }
+				postStr += e.name+'='+encodeURIComponent(e.value)
+			//	postStr += e.name+'='+escape(e.value);
+				break;
+			default:
+				if (i>0) { postStr += '&'; }
+				postStr += e.name+'='+e.value;
+				break;
+		}
+//		alert(f.elements[i].name +':'+ f.elements[i].type);
+	}
+//	alert('postStr: '+postStr)
+	
+	formUrl = 'http://'+langcode+'.wikipedia.org'+ f.action;
+	
+	req = new XMLHttpRequest();
+	req.onreadystatechange = function(){ checkRequestResponse(req, '', false) };
+	req.open("POST", formUrl, false);
+	req.setRequestHeader("Cache-Control", "no-cache");
+	var cookiestr = cookieMonster.fetch(langcode);
+	if (cookiestr) {
+		alert('post form sending cookie: '+cookiestr);
+		req.setRequestHeader("Cookie", cookiestr);
+	} else {
+		alert('post form sending no cookie');
+	}
+	req.send(postStr);
+}
 
 function checkRequestResponse(req, searchName, isHistoryRequest) {
-	//alert('readyState: '+req.readyState);
-	if (req.readyState == 4) {		
+	if (req.readyState == 4) {	
 		if(req.getResponseHeader("Set-Cookie")) {
 			var cookies = req.getResponseHeader("Set-Cookie");
 			alert(cookies);
-		}
+			cookieMonster.store(cookies);
+		}	
 		if (req.status == 200) {
-			alert("req status 200")
 			var html = req.responseText;
 			var isNotEditPage = searchName.indexOf('&action=edit') == -1;
 			var articleName;
@@ -518,50 +604,6 @@ function displayContent(input) {
 		}
 	}
 	
-}
-
-function processForm(buttonName) {
-	//alert('called by: '+buttonName);
-	f = window.document.forms[0];
-	var postStr = '';
-	for (var i=0; i<f.length; i++) {
-
-		e = f.elements[i];
-		switch (e.type) {
-			case ('submit'):
-				if (e.name == buttonName) {
-					if (i>0) { postStr += '&'; }
-					postStr += e.name+'='+e.value.replace(' ','+');
-				}
-				break;
-			case ('checkbox'):
-				if (e.checked) {
-					if (i>0) { postStr += '&'; }
-					postStr += e.name+'='+e.value;
-				}
-				break;
-			case ('textarea'):
-				if (i>0) { postStr += '&'; }
-				postStr += e.name+'='+encodeURIComponent(e.value)
-			//	postStr += e.name+'='+escape(e.value);
-				break;
-			default:
-				if (i>0) { postStr += '&'; }
-				postStr += e.name+'='+e.value;
-				break;
-		}
-//		alert(f.elements[i].name +':'+ f.elements[i].type);
-	}
-//	alert('postStr: '+postStr)
-	
-	formUrl = 'http://'+langcode+'.wikipedia.org'+ f.action;
-	
-	req = new XMLHttpRequest();
-	req.onreadystatechange = function(){ checkRequestResponse(req, '', false) };
-	req.open("POST", formUrl, false);
-	req.setRequestHeader("Cookie", "enwiki_session=5390927eaa86dfd3e775fd93426ecd50;");
-	req.setRequestHeader("Cache-Control", "no-cache");
-	req.send(postStr);
 }
 
 //this following function is taken from http://en.wikipedia.org/skins-1.5/common/wikibits.js?1
