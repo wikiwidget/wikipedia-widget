@@ -12,7 +12,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-var langcode;
+var global_lang;
 var flipper;
 var stretcher;
 var historian;
@@ -70,7 +70,7 @@ function loaded() {
 	if (window.widget) {
 		setDefaultMaxSize(widget.preferenceForKey(createKey("defaultMaxX")), widget.preferenceForKey(createKey("defaultMaxY")));
 		setCacheAge(widget.preferenceForKey("CacheAge"));
-		setLanguage(widget.preferenceForKey(createKey("langcode")));
+		setLanguage(widget.preferenceForKey(createKey("global_lang")));
 		changeInterface(widget.preferenceForKey(createKey("Interface")));
 		toggleCheckForUpdatesSetting(widget.preferenceForKey("checkForUpdatesSetting"));
 		setFontSize(widget.preferenceForKey('FontSize'));
@@ -144,7 +144,7 @@ function loaded() {
 			if (! this.atStart()) {
 				this.currentItem().contentTop = getContentTop();
 				this.pointer--;
-				searchWiki(this.currentItem().name, true);
+				searchWiki(this.currentItem().name, this.currentItem().lang, true);
 				scrollBy(this.currentItem().contentTop);
 				enableForwardButton();
 				if (this.atStart()) {
@@ -156,7 +156,7 @@ function loaded() {
 			if (! this.atEnd()) {
 				this.currentItem().contentTop = getContentTop();
 				this.pointer++;
-				searchWiki(this.currentItem().name, true);
+				searchWiki(this.currentItem().name, this.currentItem().lang, true);
 				scrollBy(this.currentItem().contentTop);
 				enableBackButton();
 				if (this.atEnd())
@@ -213,7 +213,7 @@ function loaded() {
 }
 
 function removalHandler() {
-	widget.setPreferenceForKey(null, createKey("langcode"));
+	widget.setPreferenceForKey(null, createKey("global_lang"));
 	widget.setPreferenceForKey(null, createKey("Interface"));
 	widget.setPreferenceForKey(null, createKey("defaultMaxX"));
 	widget.setPreferenceForKey(null, createKey("defaultMaxY"));
@@ -227,15 +227,16 @@ function openLinkInBrowser(url) {
 	}
 }
 function openInBrowser() {
+	//TODO: use current page url
 	if (document.getElementById('wdgtSearchInput').value.length > 0) {
 		searchTerm = document.getElementById('wdgtSearchInput').value.replace(/[\s]/gi, '+');
 		if (searchTerm.indexOf('=') < 0 && searchTerm.indexOf('&') < 0) {
 			searchTerm = escape(searchTerm);
 		}
-		wikiUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Search?search='+searchTerm+'&go=Go';
+		wikiUrl = 'http://'+global_lang+'.wikipedia.org/wiki/Special:Search?search='+searchTerm+'&go=Go';
 
 	} else {
-		wikiUrl = 'http://' + langcode + '.wikipedia.org/wiki/';
+		wikiUrl = 'http://' + global_lang + '.wikipedia.org/wiki/';
 	}
 	if (window.widget) {
 		widget.system("open '"+wikiUrl+"'", null);
@@ -243,19 +244,23 @@ function openInBrowser() {
 	}
 }
 
-function searchWiki(search, isHistoryRequest) {
+function searchWiki(search, lang, isHistoryRequest) {
 	if (search.length < 1) {
 		collapseWidget();
 		displayContent('');
 		document.getElementById('wdgtSearchInput').value = "";
 		return;
 	}
-	
+	if (lang == undefined) {
+		alert('no lang for search: '+search);
+		alert('using global_lang');
+		lang = global_lang;
+	}
 	if (isHistoryRequest == undefined) {
 		isHistoryRequest = false;
 		historian.rememberCurrentContentTop();
 	}
-		
+	
 	search = unescape(search);
 	document.getElementById('wdgtSearchInput').value = search.replace(/_/g, ' ');
 	
@@ -265,7 +270,7 @@ function searchWiki(search, isHistoryRequest) {
 	}
 	
 	var req = new XMLHttpRequest();
-	req.open("GET", filePathForArticleName(search), false);
+	req.open("GET", filePathForArticleName(search, lang), false);
 	//TODO: if history object is created with properName, and the file is named after properName, then subsequent searches for
 	//  something like "duluth mn" won't use the cached file, but will repeatedly write more cached files
 	req.send(null);
@@ -275,7 +280,7 @@ function searchWiki(search, isHistoryRequest) {
 	if (response != null && response.length > 200) {
 		displayContent(decodeURI(response));
 		if (! isHistoryRequest) {
-			historian.add(new HistoryObject(search, langcode));
+			historian.add(new HistoryObject(search, lang));
 		}
 	} else {
 		progInd.start();
@@ -300,16 +305,16 @@ function searchWiki(search, isHistoryRequest) {
 
 		// TODO: if isHistoryRequest, use <current hist object>.lang
 		if (!specPage) {
-			reqUrl = "http://"+langcode+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
+			reqUrl = "http://"+lang+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
 		} else {
-			reqUrl = "http://"+langcode+".wikipedia.org/w/index.php?title="+searchName;
+			reqUrl = "http://"+lang+".wikipedia.org/w/index.php?title="+searchName;
 		}
 		
 		wikiReq = new XMLHttpRequest();
 		wikiReq.onreadystatechange = function(){ checkRequestResponse(wikiReq, searchName, isHistoryRequest) };
 		wikiReq.open("GET", reqUrl, true);
 		wikiReq.setRequestHeader("Cache-Control", "no-cache");
-		var cookiestr = cookieMonster.fetch(langcode);
+		var cookiestr = cookieMonster.fetch(lang);
 		if (cookiestr) {
 			alert('get page sending cookie: '+cookiestr);
 			wikiReq.setRequestHeader("Cookie", cookiestr);
@@ -317,11 +322,9 @@ function searchWiki(search, isHistoryRequest) {
 			alert('get page sending no cookie');
 		}
 		wikiReq.send(null);
-		
-	//TODO: make sure langcode always has a legitimate value
 	}
 }
-function processForm(buttonName) {
+function processForm(buttonName, lang) {
 	//alert('called by: '+buttonName);
 	f = window.document.forms[0];
 	var postStr = '';
@@ -360,14 +363,14 @@ function processForm(buttonName) {
 //		alert(f.elements[i].name +':'+ f.elements[i].type);
 	}
 //	alert('postStr: '+postStr)
-	
-	formUrl = 'http://'+langcode+'.wikipedia.org'+ f.action;
+	//TODO: get lang code from current page
+	formUrl = 'http://'+lang+'.wikipedia.org'+ f.action;
 	
 	req = new XMLHttpRequest();
 	req.onreadystatechange = function(){ checkRequestResponse(req, '', false) };
 	req.open("POST", formUrl, false);
 	req.setRequestHeader("Cache-Control", "no-cache");
-	var cookiestr = cookieMonster.fetch(langcode);
+	var cookiestr = cookieMonster.fetch(lang);
 	if (cookiestr) {
 		alert('post form sending cookie: '+cookiestr);
 		req.setRequestHeader("Cookie", cookiestr);
@@ -385,6 +388,9 @@ function checkRequestResponse(req, searchName, isHistoryRequest) {
 			cookieMonster.store(cookies);
 		}	
 		if (req.status == 200) {
+			alert(req.responseXML);			
+
+			// alert(docel.getElementById('content').innerText);
 			var html = req.responseText;
 			var isNotEditPage = searchName.indexOf('&action=edit') == -1;
 			var articleName;
@@ -393,10 +399,13 @@ function checkRequestResponse(req, searchName, isHistoryRequest) {
 			} else {
 				articleName = searchName;
 			}
+			var lang = langFromHTML(html);
+			if (! lang) { lang = global_lang };
+			
 			html = processRawHTML(html);
 			displayContent(html);
 			if (! isHistoryRequest) {
-				historian.add(new HistoryObject(articleName, langcode));
+				historian.add(new HistoryObject(articleName, lang));
 				if (window.widget) {
 					catCmd = widget.system("/bin/cat > "+historian.currentItem().file, function(object){});
 					catCmd.write(encodeURI(html));
@@ -407,7 +416,7 @@ function checkRequestResponse(req, searchName, isHistoryRequest) {
 	}
 }
 
-function filePathForArticleName(name) {
+function filePathForArticleName(name, lang) {
 	//TODO: clean me
 	
 	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
@@ -422,7 +431,7 @@ function filePathForArticleName(name) {
 	// 		}
 	// 	}
 	// }
-	path = "/Users/"+userName+"/Library/Caches/WikipediaWidget/"+langcode+"_"+nameForFile;
+	path = "/Users/"+userName+"/Library/Caches/WikipediaWidget/"+lang+"_"+nameForFile;
 	if (sameNameForFileCount > 0)
 		path += '_'+sameNameForFileCount;
 	path += '.html';
@@ -445,66 +454,68 @@ function cancelArticleRequest() {
 function properNameFromHTML(html) {
 	/* get the actual page title */
 	/*   stored in a js var, eg:  var wgPageName = "Brad_Pitt"; */
-	properName = '';	
+	var properName = '';	
 	properNamePattern = /var wgPageName = \"[^\n]+\n/;
 	if(properNameMatch = html.match(properNamePattern)) {
 	 	eval(properNameMatch[0]);
 		properName = wgPageName;
 	} else {
 		/* try to grab it from the html */
-	 	properName = $("#firstHeading", html).text();  //TODO: could be undefined
-		properName = $.trim(properName);
+		alert('failed to get wgPageName, trying firstHeading')
 		
+		var dp = new DOMParser().parseFromString(html, 'application/xml');
+		properName = dp.getElementById("firstHeading").innerText.trim();
 		//TODO: does the id name change depending on user-set style preference?
 	}
-	
 	return properName.replace(/_/g, ' ')
-	
-	
 }
+
+function langFromHTML(html) {
+	alert('langFromHTML')
+	var lang = '';
+	var re = /var wgContentLanguage = \"([^"]+)\"/;
+	var match = html.match(re);
+	if (match) {
+		lang = match[1];
+	}
+	return lang;
+}
+
 function processRawHTML(html) {
 
 	//TODO: handle google search, normal search, and search results
+	var lang = langFromHTML(html);
+	var qlang = '"'+lang+'"';
 	
 	/* restrict ourselves to the contents of the "content" div */
-	html = $("#content", html).html();
-	
+	var xmlDoc = new DOMParser().parseFromString(html, 'application/xml');
+	html = xmlDoc.getElementById("content").innerHTML;
+
 	tocPattern = /a\shref="\#([^"]+)"/g;
 	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
 	html = html.replace(tocPattern, tocReplace);
 
 	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;
-	wikiReplace = 'href=\'javascript:searchWiki("$1)\'';
+	wikiReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(wikiPattern, wikiReplace);
-	
-	loginUrl = 'http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin';		
-	
-	loginPattern = 'searchWiki("Special:Userlogin")';
-//	loginReplace = 'openLinkInBrowser("http://'+langcode+'.wikipedia.org/wiki/Special:Userlogin")';
-	loginReplace = 'openLinkInBrowser("'+loginUrl+'")';
-	html = html.replace(loginPattern, loginReplace);
 
 	imgPattern = /href=\n*"\/wiki\/(\S+)/g;
-	imgReplace = 'href=\'javascript:searchWiki("$1)\'';
+	imgReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(imgPattern, imgReplace);
 
 	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g
-	searchResNumReplace = 'href=\'javascript:searchWiki("$1$2");\'';
+	searchResNumReplace = 'href=\'javascript:searchWiki("$1$2", '+qlang+');\'';
 	html = html.replace(searchResNumPattern, searchResNumReplace);
 
 	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g
-	newEditReplace = 'href=\'javascript:searchWiki("$1");\'';
+	newEditReplace = 'href=\'javascript:searchWiki("$1", '+qlang+');\'';
 	html = html.replace(newEditPattern, newEditReplace);
 	
-/*	editPattern = /href=\n*"\/(^>\S+)/g;
-	editReplace = 'href=\'javascript:openLinkInBrowser("http://' + langcode + '.wikipedia.org/$1)\'';
-	html = html.replace(editPattern, editReplace);
-*/	
 	extPattern = /href=\n*"([^\s>]+)/g;
-	extReplace = 'href=\'javascript:openLinkInBrowser("$1)\'';
+	extReplace = 'href=\'javascript:openLinkInBrowser("$1, '+qlang+')\'';
 	html = html.replace(extPattern, extReplace);
 	
-	srcUrl = 'http://'+langcode+'.wikipedia.org/';		
+	srcUrl = 'http://'+lang+'.wikipedia.org/';
 	
 	srcPattern = /src=\n*"\//g;
 	srcReplace = 'src="'+srcUrl;
@@ -516,11 +527,11 @@ function processRawHTML(html) {
 	html = html.replace(jumpnavPattern, '');
 	
 	submit1Pattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g;
-	submit1Replace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1")\''
+	submit1Replace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1", '+qlang+')\''
 	html = html.replace(submit1Pattern, submit1Replace);
 	
 	submit2Pattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g;
-	submit2Replace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2")\''
+	submit2Replace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2", '+qlang+')\''
 	html = html.replace(submit2Pattern, submit2Replace);
 	
 /*	textareaPattern = /<textarea /g;
@@ -571,7 +582,9 @@ function displayContent(input) {
 		document.getElementById('editButton').innerHTML = '✍';
 		document.getElementById('fontSizeSmaller').innerHTML = 'A';
 		document.getElementById('fontSizeBigger').innerHTML = 'A';
-		document.getElementById('editButton').onclick = function() { searchWiki(historian.currentItem().name + '&action=edit') }
+		document.getElementById('editButton').onclick = function() {
+			searchWiki(historian.currentItem().name + '&action=edit', historian.currentItem().lang) 
+		}
 		stretcher.stretch(event);
 	}
 	
@@ -692,11 +705,11 @@ function setCacheAge(minutes) {
 	}
 }
 function setLanguage(language) {
-	if (typeof(language) == "undefined" || language == "undefined" || language == "") {
+	if (typeof(language) == "undefined" || language == "undefined" || language.length < 2) {
 		language = getLocalizedString("en");
 	}
-	langcode = language;
-	switch (langcode) {
+	global_lang = language;
+	switch (global_lang) {
 		case "en": langname = "English"; break;
 		case "fr": langname = "Français"; break;
 		case "ja": langname = "日本語"; break;
@@ -757,11 +770,11 @@ function setLanguage(language) {
 		case "tr": langname = "Türkçe"; break;
 		case "th": langname = "ไทย"; break;
 		case "wa": langname = "Walon"; break;
-		default:   langname = langcode;
+		default:   langname = global_lang;
 	}
 	document.getElementById('wdgtSearchInput').setAttribute('placeholder', langname);
 	if (window.widget) {
-		widget.setPreferenceForKey(langcode, createKey("langcode"));
+		widget.setPreferenceForKey(global_lang, createKey("global_lang"));
 	}
 }
 
@@ -943,7 +956,7 @@ function transitionToBack() {
 	document.getElementById('randomLink').style.display='none';
 	document.getElementById('wdgtBack').style.display='block';
 
-	document.getElementById('languageField').value = langcode;
+	document.getElementById('languageField').value = global_lang;
 	languageFieldDidChange();
 	document.getElementById('cacheField').value = widget.preferenceForKey("CacheAge");
 	document.getElementById('checkForUpdatesBox').checked = widget.preferenceForKey("checkForUpdatesSetting");
@@ -1197,4 +1210,8 @@ function getLocalizedString(key) {
 		return ret;
 	} catch (ex) {}
 	return key;
+}
+
+String.prototype.trim = function() {
+	return this.replace(/^\s+|\s+$/g,"");
 }
