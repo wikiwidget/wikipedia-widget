@@ -105,7 +105,6 @@ SUCH DAMAGE.
 	var trackingMouse				= false;	// is the mouse down in the scroll track
 	var trackingKeys				= false;	// is arrow/page up/down being held
 
-
 /*
  ************************************************************
  * Style constants hardcoded to match respective CSS values	*
@@ -220,7 +219,11 @@ function mouseWheelMove(event) {
  *	Key Scrolling Functions	*
  ****************************
  */
- 
+
+function ascii(letter) {
+	return letter.charCodeAt(0);
+}
+
 function keyPressed (event) {
 	//when no text box is selected, event.target.id.length == 0
 	var invalid = event.target.id.length;
@@ -292,7 +295,6 @@ function keyPressed (event) {
                 }
             }
             break;
-        
 		default:
 			theAction = null;
 			break;
@@ -304,7 +306,15 @@ function keyPressed (event) {
 	       selectSearchInput();
 	   }
     }
-	
+	if (event.ctrlKey) {
+		// huh?  when ctrl is not down, 'o' charcode is 111
+		// when ctrl is down, 'o' charcode is 15...
+		// alert('ctrl + '+event.charCode);
+		if (event.charCode == 15 || event.charCode == 111) {
+			// ctrl-o
+			goToLoginPage();
+		}
+	}
 	if (theAction == null) {
 		trackingKeys = false;
 	} else {

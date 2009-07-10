@@ -186,6 +186,13 @@ function loaded() {
 				return this.cookies[lang];
 			}
 			return '';
+		},
+		
+		kill: function(lang) {
+			if (lang in this.cookies) {
+				alert('killing cookie: '+lang);
+				delete this.cookies[lang];
+			}
 		}
 	};
 	
@@ -566,6 +573,24 @@ function inputFocus(obj) {
 	// called by onfocus event of wikipedia form inputs
 	// see inputReplace above
 	scrollBy(-findTop(obj)+55);
+}
+
+function goToLoginPage() {
+	alert('goToLogin')
+	var lang;
+	if (historian.currentItem()) {
+		lang = historian.currentItem().lang;
+	} else {
+		lang = global_lang;
+	}
+	
+	if (cookieMonster.fetch(lang)) {
+		// we're probably logged in, so kill the cookie and go to the logout page
+		cookieMonster.kill(lang);
+		searchWiki(lang+': Special:UserLogout', lang);
+	} else {
+		searchWiki(lang+': Special:UserLogin', lang);
+	}
 }
 
 function scrollToAnchor(anchorName) {
