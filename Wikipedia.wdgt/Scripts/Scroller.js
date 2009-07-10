@@ -210,7 +210,7 @@ function hideScrollBar() {
 
 function mouseWheelMove(event) {
     if (scrollable) {
-        var clicks = window.event.wheelDelta/20;
+        var clicks = window.event.wheelDelta/10;
         scrollBy(clicks);
     }
 }
@@ -279,12 +279,9 @@ function keyPressed (event) {
 			}
 			break;
         case 9: // tab
-			if (event.target.id == "nameField")
-            	theAction = null;
-			else if (event.target.id == "commentField")
-	        	theAction = selectNameField;
-			else
-				theAction = selectSearchInput;
+			if (event.target.id == "commentField") {
+				theAction = selectNameField;
+			}
             break;
         case 8: // delete
             if (!invalid) {

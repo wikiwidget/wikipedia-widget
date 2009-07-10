@@ -480,12 +480,22 @@ function langFromHTML(html) {
 	}
 	return lang;
 }
+function findTop(obj) {
+	var curtop = 0;
+	if (obj.offsetParent) {
+		do {
+			curtop += obj.offsetTop;
+		} while (obj = obj.offsetParent);
+	}
+	return curtop;
+}
 
 function processRawHTML(html) {
 
 	//TODO: handle google search, normal search, and search results
 	var lang = langFromHTML(html);
 	var qlang = '"'+lang+'"';
+	var properName = properNameFromHTML(html);
 	
 	/* restrict ourselves to the contents of the "content" div */
 	var xmlDoc = new DOMParser().parseFromString(html, 'application/xml');
@@ -534,22 +544,35 @@ function processRawHTML(html) {
 	submit2Replace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2", '+qlang+')\''
 	html = html.replace(submit2Pattern, submit2Replace);
 	
-/*	textareaPattern = /<textarea /g;
-	textareaReplace = '<textarea onmousemove="wiggleScrollBar();" ';
-	html = html.replace(textareaPattern, textareaReplace)*/
+	loginPattern = 'searchWiki("Special:UserLogin", '+qlang+')';
+	
+	loginReplace = 'searchWiki("Special:UserLogin&returnto='+properName.replace(' ','_')+'", '+qlang+')';
+	html = html.replace(loginPattern, loginReplace);
+	
+	inputPattern = /<input /g;
+	inputReplace = '<input onfocus="inputFocus(this);" ';
+	html = html.replace(inputPattern, inputReplace);
+	
+	textareaPattern = /<textarea /g;
+	textareaReplace = '<textarea onfocus="inputFocus(this);" ';
+	html = html.replace(textareaPattern, textareaReplace)
 	
 //	titlePattern = /title="[^"]+"/g;
   //  html = html.replace(titlePattern, '');
 	
 	return html;
-	
-		
 }
+function inputFocus(obj) {
+	// called by onfocus event of wikipedia form inputs
+	// see inputReplace above
+	scrollBy(-findTop(obj)+55);
+}
+
 function scrollToAnchor(anchorName) {
 	var a = document.getElementById(anchorName);
 	if (!a)
 		a = document.anchors[anchorName];
-	var anchorPosition = a.offsetTop + currentContentTop;
+	var anchorPosition = a.offsetTop + getContentTop();
 	scrollBy(-anchorPosition);
 }
 
