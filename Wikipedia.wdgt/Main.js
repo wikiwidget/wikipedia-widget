@@ -572,7 +572,17 @@ function processRawHTML(html) {
 function inputFocus(obj) {
 	// called by onfocus event of wikipedia form inputs
 	// see inputReplace above
-	scrollBy(-findTop(obj)+55);
+
+	var obtop = findTop(obj);
+	var h = window.innerHeight;
+	// document.getElementById('wdgtFront').style.height;
+	// alert('obj: '+obtop+'  height: '+h)
+	
+	if (obtop < 40 || obtop > h-40) {
+		scrollBy(-findTop(obj) + 50);
+	}
+	
+	
 }
 
 function goToLoginPage() {
