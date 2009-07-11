@@ -145,7 +145,6 @@ function loaded() {
 				this.currentItem().contentTop = getContentTop();
 				this.pointer--;
 				searchWiki(this.currentItem().name, this.currentItem().lang, true);
-				scrollBy(this.currentItem().contentTop);
 				enableForwardButton();
 				if (this.atStart()) {
 					disableBackButton();
@@ -395,9 +394,6 @@ function checkRequestResponse(req, searchName, isHistoryRequest) {
 			cookieMonster.store(cookies);
 		}	
 		if (req.status == 200) {
-			alert(req.responseXML);			
-
-			// alert(docel.getElementById('content').innerText);
 			var html = req.responseText;
 			var isNotEditPage = searchName.indexOf('&action=edit') == -1;
 			var articleName;
@@ -411,13 +407,16 @@ function checkRequestResponse(req, searchName, isHistoryRequest) {
 			
 			html = processRawHTML(html);
 			displayContent(html);
+			if (isHistoryRequest) {
+				scrollBy(historian.currentItem().contentTop);
+			}
 			if (! isHistoryRequest) {
 				historian.add(new HistoryObject(articleName, lang));
-				if (window.widget) {
-					catCmd = widget.system("/bin/cat > "+historian.currentItem().file, function(object){});
-					catCmd.write(encodeURI(html));
-					catCmd.close();
-				}
+			}
+			if (window.widget && isNotEditPage) {
+				catCmd = widget.system("/bin/cat > "+historian.currentItem().file, function(object){});
+				catCmd.write(encodeURI(html));
+				catCmd.close();
 			}
 		}
 	}
@@ -553,7 +552,7 @@ function processRawHTML(html) {
 	
 	loginPattern = 'searchWiki("Special:UserLogin", '+qlang+')';
 	
-	loginReplace = 'searchWiki("Special:UserLogin&returnto='+properName.replace(' ','_')+'", '+qlang+')';
+	loginReplace = 'searchWiki("Special:UserLogin&returnto='+properName.replace(' ','_')+'", '+qlang+', true)';
 	html = html.replace(loginPattern, loginReplace);
 	
 	inputPattern = /<input /g;
@@ -597,9 +596,9 @@ function goToLoginPage() {
 	if (cookieMonster.fetch(lang)) {
 		// we're probably logged in, so kill the cookie and go to the logout page
 		cookieMonster.kill(lang);
-		searchWiki(lang+': Special:UserLogout', lang);
+		searchWiki(lang+': Special:UserLogout', lang, true);
 	} else {
-		searchWiki(lang+': Special:UserLogin', lang);
+		searchWiki(lang+': Special:UserLogin', lang, true);
 	}
 }
 
