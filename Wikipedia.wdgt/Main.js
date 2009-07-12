@@ -508,9 +508,13 @@ function processRawHTML(html) {
 	var properName = properNameFromHTML(html);
 	
 	/* restrict ourselves to the contents of the "content" div */
-	var xmlDoc = new DOMParser().parseFromString(html, 'application/xml');
-	html = xmlDoc.getElementById("content").innerHTML;
-
+	try {
+		var xmlDoc = new DOMParser().parseFromString(html, 'application/xml');
+		html = xmlDoc.getElementById("content").innerHTML;
+	} catch (e) {
+		// no domparser (safari < 3)
+		html = $("#content", html).html();
+	}
 	tocPattern = /a\shref="\#([^"]+)"/g;
 	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
 	html = html.replace(tocPattern, tocReplace);
