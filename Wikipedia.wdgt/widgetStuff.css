@@ -320,13 +320,13 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 }
 #languageField {
 	position: absolute;
-	top:  22px; //30px;
+	top:  22px;
 	left: 129px;
 }
 #languageSelect {
     position: absolute;
     top: 22px;
-    left: 167px;
+    left: 172px;
 }
 #cacheLabel {
     position: absolute;
@@ -335,35 +335,40 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 }
 #cacheMinutesLabel {
 	position: absolute;
-	top: 88px;
-	left: 30px;
+	top: 68px;
+	left: 123px;
     opacity: 0.75;
 }
 #cacheField {
 	position: absolute;
-	top: 65px;
-	left: 32px;
+	top: 47px;
+	left: 129px;
 }
 #cacheButton {
 	position: absolute;
-	top: 66px;
-	left: 83px;
+	top: 47px;
+	left: 172px;
+}
+#cookieButton {
+    position: absolute;
+    top: 92px;
+    left: 31px;
 }
 #colorLabel {
 	position: absolute;
-	top: 118px;
+	top: 127px;
 	left: 31px;
 }
 #colorSelect {
 	position: absolute;
-	top: 114px;
+	top: 123px;
 	left: 80px;
 }
 #checkForUpdatesLabel {}
 #checkForUpdatesBox {}
 #checkForUpdatesDiv {
 	position: absolute;
-	top: 144px;
+	top: 153px;
 	left: 31px;
 }
 
@@ -408,8 +413,18 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 	display: block;
 	position: absolute;
 	top: 180px;
-	left: 66px;
+	left: 65px;
 	opacity: 0.6;
+}
+#donateButton {
+	font-size: 10px;
+	font-weight: bold;
+	color: white;
+	display: block;
+	position: absolute;
+	top: 189px;
+	left: 98px;
+	opacity: 0.5;
 }
 #commentStatusMessage {
 	font-size: 14px;

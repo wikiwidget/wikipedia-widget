@@ -91,6 +91,7 @@ function loaded() {
 	document.getElementById('cacheLabel').innerHTML = getLocalizedString("Max cache age:");
 	document.getElementById('cacheMinutesLabel').innerHTML = getLocalizedString("minute(s)");
 	document.getElementById('cacheButton').value = getLocalizedString("Empty Cache");
+	document.getElementById('cookieButton').value = getLocalizedString("Delete Cookies");
 	document.getElementById('colorLabel').innerHTML = getLocalizedString("Color:");
 	document.getElementById('blueOption').innerHTML = getLocalizedString("Blue");
 	document.getElementById('greyOption').innerHTML = getLocalizedString("Grey");
@@ -189,9 +190,11 @@ function loaded() {
 		
 		kill: function(lang) {
 			if (lang in this.cookies) {
-				alert('killing cookie: '+lang);
 				delete this.cookies[lang];
 			}
+		},
+		killAll: function() {
+			this.cookies = {};
 		}
 	};
 	
