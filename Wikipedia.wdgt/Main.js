@@ -550,13 +550,17 @@ function processRawHTML(html) {
 	jumpnavPattern = /<div id="jump-to-nav">[^q]+?<\/div>/;
 	html = html.replace(jumpnavPattern, '');
 	
-	submit1Pattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g;
-	submit1Replace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1", '+qlang+')\''
-	html = html.replace(submit1Pattern, submit1Replace);
+	submitPattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g;
+	submitReplace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1", '+qlang+')\'';
+	html = html.replace(submitPattern, submitReplace);
 	
-	submit2Pattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g;
-	submit2Replace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2", '+qlang+')\''
-	html = html.replace(submit2Pattern, submit2Replace);
+	submitPattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g;
+	submitReplace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2", '+qlang+')\'';
+	html = html.replace(submitPattern, submitReplace);
+	
+	submitPattern = /<input type=['"]submit["'] value=/;
+	submitReplace = '<input type=\'submit\' onclick=\'processForm("himom", '+qlang+')\' value=';
+	html = html.replace(submitPattern, submitReplace);
 	
 	loginPattern = 'searchWiki("Special:UserLogin", '+qlang+')';
 	
