@@ -772,74 +772,12 @@ function setCacheAge(minutes) {
 		widget.setPreferenceForKey(minutes, "CacheAge");
 	}
 }
-function setLanguage(language) {
-	if (typeof(language) == "undefined" || language == "undefined" || language.length < 2) {
-		language = getLocalizedString("en");
+function setLanguage(lang) {
+	if (typeof(lang) == "undefined" || lang == "undefined" || lang.length < 2) {
+		lang = getLocalizedString("en");
 	}
-	global_lang = language;
-	switch (global_lang) {
-		case "en": langname = "English"; break;
-		case "fr": langname = "Français"; break;
-		case "ja": langname = "日本語"; break;
-		case "sv": langname = "Svenska"; break;
-		case "nl": langname = "Nederlands"; break;
-		case "it": langname = "Italiano"; break;
-		case "de": langname = "Deutsch"; break;
-		case "pl": langname = "Polski"; break;
-		case "es": langname = "Español"; break;
-		case "pt": langname = "Português"; break;
-		case "he": langname = "עברית"; break;
-		case "zh": langname = "中文"; break;
-		case "bg": langname = "Български"; break;
-		case "ru": langname = "Русский"; break;
-		case "uk": langname = "Українська"; break;
-		case "ca": langname = "Català"; break;
-		case "da": langname = "Dansk"; break;
-		case "no": langname = "Norsk"; break;
-		case "ro": langname = "Română"; break;
-		case "sr": langname = "Српски"; break;
-		case "sl": langname = "Slovenščina"; break;
-		case "fi": langname = "Suomi"; break;
-		case "mt": langname = "Malti"; break;
-		case "ko": langname = "한국어"; break;
-		case "sa": langname = "संस्कृतम्"; break;
-		case "fa": langname = "فارسی"; break;
-		case "ar": langname = "العربية"; break;
-		case "el": langname = "Ελληνικά"; break;
-		case "hi": langname = "हिन्दी"; break;
-		case "af": langname = "Afrikaans"; break;
-		case "ast": langname = "Asturianu"; break;
-		case "be": langname = "Беларуская"; break;
-		case "bs": langname = "Bosanski"; break;
-		case "cs": langname = "Česká"; break;
-		case "cy": langname = "Cymraeg"; break;
-		case "et": langname = "Eesti"; break;
-		case "simple": langname = "Simple English"; break;
-		case "eu": langname = "Euskara"; break;
-		case "fy": langname = "Frysk"; break;
-		case "gd": langname = "Gàidhlig"; break;
-		case "gl": langname = "Galego"; break;
-		case "hr": langname = "Hrvatski"; break;
-		case "io": langname = "Ido"; break;
-		case "id": langname = "Bahasa Indonesia"; break;
-		case "ia": langname = "Interlingua"; break;
-		case "is": langname = "Íslenska"; break;
-		case "ku": langname = "Kurdî / كوردی"; break;
-		case "la": langname = "Latina"; break;
-		case "lv": langname = "Latviešu"; break;
-		case "lb": langname = "Lëtzebuergesch"; break;
-		case "lt": langname = "Lietuvių"; break;
-		case "hu": langname = "Magyar"; break;
-		case "ms": langname = "Bahasa Melayu"; break;
-		case "nn": langname = "Norsk (nynorsk)"; break;
-		case "nds": langname = "Plattdüütsch"; break;
-		case "sk": langname = "Slovenčina"; break;
-		case "tt": langname = "Tatarça"; break;
-		case "tr": langname = "Türkçe"; break;
-		case "th": langname = "ไทย"; break;
-		case "wa": langname = "Walon"; break;
-		default:   langname = global_lang;
-	}
+	global_lang = lang;
+	var langname = languageNameFromCode(lang);
 	document.getElementById('wdgtSearchInput').setAttribute('placeholder', langname);
 	if (window.widget) {
 		widget.setPreferenceForKey(global_lang, createKey("global_lang"));
