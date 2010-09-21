@@ -170,6 +170,7 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 	background-repeat:  no-repeat;
 	background-position: center center;
     background-attachment: fixed;
+    opacity: 0.4;
 }
 #wdgtSearchInput {
     font-size: 15px;
@@ -245,8 +246,8 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 /*	display: none;
 */	font-family: Lucida;
 	position:absolute;
-	right:60px;
-	bottom:17px;
+	right:54px;
+	bottom:16px;
 /*	z-index:20;
 	text-shadow: 2px 2px 4px #999;
 	opacity: 0.9;
@@ -256,14 +257,14 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 	color: #833F2F;
 	font-size: 12px;
 	position:absolute;
-	right:97px;
+	right:95px;
 	bottom:18px;
 }
 #fontSizeBigger {
 	color: #833F2F;
 	font-size: 15px;
 	position:absolute;
-	right:85px;
+	right:83px;
 	bottom:18px;
 }
 
@@ -418,12 +419,12 @@ li  { font-size: 12px; padding-left: 0; margin-left: 0; }
 }
 #donateButton {
 	font-size: 10px;
-	font-weight: bold;
+	font-weight: normal;
 	color: white;
 	display: block;
 	position: absolute;
 	top: 189px;
-	left: 98px;
+	left: 104px;
 	opacity: 0.5;
 }
 #commentStatusMessage {
