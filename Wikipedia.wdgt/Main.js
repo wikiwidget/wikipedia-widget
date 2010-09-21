@@ -32,6 +32,9 @@ var vSize;
 var hSize;
 var commentWindowOpen;
 
+function log(s) {
+	/* uncomment the following line to turn on debug logging */
+	//alert(s);
 }
 
 function loaded() {
@@ -56,12 +59,17 @@ function loaded() {
 		
 	}
 	
+	log('init global_lang='+global_lang);
+	
 	//(element, minY, maxY, minX, maxX, time)
 	stretcher = new Stretcher(document.getElementById('wdgtFront'), 73, widget.preferenceForKey(createKey("defaultMaxY")), hSize, widget.preferenceForKey(createKey("defaultMaxX")), 250, stretchFinished);
 	
 	calculateAndShowThumb(contentDiv);
 	if (window.widget) {
-		widget.system("mkdir ~/Library/Caches/WikipediaWidget", emptyFunction);
+		userName = widget.system("/bin/echo $USER", null).outputString.replace(/\n/, '');
+		log('userName='+userName)
+		log('trying to make cache dir');
+		widget.system("/bin/mkdir /Users/"+userName+"/Library/Caches/WikipediaWidget", systemCallHandler);
 	}
 
 	createGenericButton(document.getElementById('wdgtDoneButton'), getLocalizedString("Done"), showFront); 
@@ -193,10 +201,6 @@ function loaded() {
 	
 	
 	progInd = new ProgressIndicator(document.getElementById('progressGraphic'), "Images/prog");
-
-	if (window.widget) {
-		userName = widget.system("echo $USER", null).outputString.replace(/\n/, '');
-	}
 	currentVersion = getKeyValue("version.plist", "CFBundleVersion");
 	commentWindowOpen = false;
 	windowCollapsed = true;
@@ -224,7 +228,7 @@ function openLinkInBrowser(url) {
 	if (window.widget) {
 		url = encodeURI(url);
 //		widget.openURL(encodeURIComponent(url));
-		widget.system("open '"+url+"'", null);
+		widget.system("/usr/bin/open '"+url+"'", null);
 		widget.openURL('');
 	}
 }
@@ -241,19 +245,21 @@ function openInBrowser() {
 		wikiUrl = 'http://' + global_lang + '.wikipedia.org/wiki/';
 	}
 	if (window.widget) {
-		widget.system("open '"+wikiUrl+"'", null);
+		widget.system("/usr/bin/open '"+wikiUrl+"'", null);
 		widget.openURL('');
 	}
 }
 
 function searchWiki(search, lang, addToHistory, saveToCache) {
+	log('searchWiki called');
 	if (search.length < 1) {
 		collapseWidget();
 		displayContent('');
 		document.getElementById('wdgtSearchInput').value = "";
 		return;
 	}
-	if (lang == undefined) {
+	if (lang == undefined || lang == "undefined" || lang == '' || lang.length<2) {
+		log('searchWiki no lang: '+lang)
 		lang = global_lang;
 	}
 	if (addToHistory == undefined) {
@@ -269,15 +275,20 @@ function searchWiki(search, lang, addToHistory, saveToCache) {
 	
 	/* delete old cached files */
 	if (window.widget) {
-		widget.system("find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", null);
+		log('deleting old cached files')
+		try {
+			widget.system("/usr/bin/find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", systemCallHandler);
+		} catch(e) {}
 	}
 	
+	log('searchWiki requesting cached file: '+filePathForArticleName(search, lang));
 	var req = new XMLHttpRequest();
 	req.open("GET", filePathForArticleName(search, lang), false);
 	//TODO: if history object is created with properName, and the file is named after properName, then subsequent searches for
 	//  something like "duluth mn" won't use the cached file, but will repeatedly write more cached files
 	req.send(null);
 	response = req.responseText;
+	log('cache responseText:'+response);
 	req = null;
 	
 	if (response != null && response.length > 200) {
@@ -399,9 +410,13 @@ function checkRequestResponse(req, searchName, addToHistory, saveToCache) {
 				historian.add(new HistoryObject(articleName, lang));
 			}
 			if (saveToCache && isNotEditPage && window.widget) {
-				catCmd = widget.system("/bin/cat > "+historian.currentItem().file, function(object){});
-				catCmd.write(encodeURI(html));
-				catCmd.close();
+				//TODO: don't run cat if file doesn't exist
+				log('attempting to save to cache file: '+historian.currentItem().file);
+				try {
+					catCmd = widget.system("/bin/cat > "+historian.currentItem().file, systemCallHandler);
+					catCmd.write(encodeURI(html));
+					catCmd.close();
+				} catch(e) {}
 			}
 		}
 	}
@@ -993,13 +1008,17 @@ function showFront(event) {
 	}
 }
 
-function emptyFunction(input) {
-	return;
+function systemCallHandler(object) {
+	log('sys call status: '+object.status);
+	log('sys call outputString: '+object.outputString);
+	log('sys call errorString: '+object.errorString);
 }
 
 function emptyCache() {
 	if (window.widget) {
-		widget.system("find ~/Library/Caches/WikipediaWidget -mmin +0 -delete", null);
+		try {
+			widget.system("/usr/bin/find ~/Library/Caches/WikipediaWidget -mmin +0 -delete", null);
+		} catch(e) {}
 	}
 }
 
