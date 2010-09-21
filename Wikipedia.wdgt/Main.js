@@ -299,33 +299,32 @@ function searchWiki(search, lang, addToHistory, saveToCache) {
 		}
 	} else {
 		progInd.start();
-		
-		searchName = search.replace(/_/g, '+').replace(/ /g, '+'); //.replace(/&/g, "%26")
-		
+		searchEnc = search.replace(/\+/g, '%2B').replace(/([ _+])&([ _+])/g, "$1%26$2")
+		searchEnc = searchEnc.replace(/[_ ]/g, '+');
 		var specPage = false;
-		if (searchName.indexOf('=')>0 && searchName.indexOf('&')>0) {
+		if (search.indexOf('=')>0 && search.indexOf('&')>0) {
 			specPage = true;
 		}
 		imageWords = new Array('Image:', '画像:','Bild:','Afbeelding:','Immagine:','Grafika:','Imagen:','Imagem:','תמונה:','Billede:');
 		for (i=0;i<imageWords.length;i++) {
 			if (!specPage) {
-				if (searchName.indexOf(imageWords[i]) > -1) {
+				if (search.indexOf(imageWords[i]) > -1) {
 					specPage = true;
 				}
 			}
 		}
-		if (searchName.indexOf('&fulltext=Search') > -1) {
+		if (search.indexOf('&fulltext=Search') > -1) {
 			specPage = false;
 		}
-
-		if (!specPage) {
-			reqUrl = "http://"+lang+".wikipedia.org/wiki/Special:Search?search="+searchName+'&go=Go';
-		} else {
-			reqUrl = "http://"+lang+".wikipedia.org/w/index.php?title="+searchName;
-		}
 		
+		if (!specPage) {
+			reqUrl = "http://"+lang+".wikipedia.org/wiki/Special:Search?search="+searchEnc+'&go=Go';
+		} else {
+			reqUrl = "http://"+lang+".wikipedia.org/w/index.php?title="+searchEnc;
+		}
+		log('searchWiki reqUrl='+reqUrl)
 		wikiReq = new XMLHttpRequest();
-		wikiReq.onreadystatechange = function(){ checkRequestResponse(wikiReq, searchName, addToHistory, saveToCache) };
+		wikiReq.onreadystatechange = function(){ checkRequestResponse(wikiReq, search, addToHistory, saveToCache) };
 		wikiReq.open("GET", reqUrl, true);
 		wikiReq.setRequestHeader("Cache-Control", "no-cache");
 		var cookiestr = cookieMonster.fetch(lang);
@@ -402,10 +401,13 @@ function checkRequestResponse(req, searchName, addToHistory, saveToCache) {
 			var lang = langFromHTML(html);
 			if (! lang) { lang = global_lang };
 			
+			log('checkRequestResponse, status == 200');
+			
 			html = processRawHTML(html);
+			log('checkRequestResponse, about to display content')
 			displayContent(html);
 			historian.didDisplayContent();
-
+			
 			if (addToHistory) {
 				historian.add(new HistoryObject(articleName, lang));
 			}
@@ -460,14 +462,12 @@ function properNameFromHTML(html) {
 	/* get the actual page title */
 	/*   stored in a js var, eg:  var wgPageName = "Brad_Pitt"; */
 	var properName = '';	
-	properNamePattern = /var wgPageName = \"[^\n]+\n/;
+	properNamePattern = /wgPageName ?= ?\"[^\n]+\n/;
 	if(properNameMatch = html.match(properNamePattern)) {
 	 	eval(properNameMatch[0]);
 		properName = wgPageName;
 	} else {
 		/* try to grab it from the html */
-		alert('failed to get wgPageName, trying firstHeading')
-		
 		var dp = new DOMParser().parseFromString(html, 'application/xml');
 		properName = dp.getElementById("firstHeading").innerText.trim();
 		//TODO: does the id name change depending on user-set style preference?
@@ -477,11 +477,12 @@ function properNameFromHTML(html) {
 
 function langFromHTML(html) {
 	var lang = '';
-	var re = /var wgContentLanguage = \"([^"]+)\"/;
+	var re = /wgContentLanguage ?= ?\"([^"]+)\"/;
 	var match = html.match(re);
 	if (match) {
 		lang = match[1];
 	}
+	log('langFromHTML: '+lang)
 	return lang;
 }
 function findTop(obj) {
@@ -497,17 +498,23 @@ function findTop(obj) {
 function processRawHTML(html) {
 
 	//TODO: handle google search, normal search, and search results
+	log('processRawHTML running');
+	
 	var lang = langFromHTML(html);
+	if (! lang) { lang = global_lang };
 	var qlang = '"'+lang+'"';
 	var properName = properNameFromHTML(html);
 	
+	log('properNameFromHTML: '+properName)
 	/* restrict ourselves to the contents of the "content" div */
 	try {
 		var xmlDoc = new DOMParser().parseFromString(html, 'application/xml');
 		html = xmlDoc.getElementById("content").innerHTML;
 	} catch (e) {
+		log('DOMParser failed, trying jquery')
 		// no domparser (safari < 3)
 		html = $("#content", html).html();
+		log('jquery #content div contents:'+html);
 	}
 	tocPattern = /a\shref="\#([^"]+)"/g;
 	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
@@ -571,7 +578,7 @@ function processRawHTML(html) {
 	
 //	titlePattern = /title="[^"]+"/g;
   //  html = html.replace(titlePattern, '');
-	
+	log('processRawHTML finished')
 	return html;
 }
 function inputFocus(obj) {
