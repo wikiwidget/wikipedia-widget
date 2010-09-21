@@ -32,27 +32,6 @@ var vSize;
 var hSize;
 var commentWindowOpen;
 
-function makeSearchURL(url, search) {
-	if (url.indexOf('index.php/') > -1)
-		url = url.substring(0,url.indexOf("index.php/"));
-	else
-		url = url.substring(0,url.lastIndexOf("/")+1);
-	return url+"index.php?search="+search+"&go=Go";
-}
-function makeStandardURL(url, page) {
-	if (page == "") {
-		url = url.substring(0,url.lastIndexOf("/")+1);
-		alert("page is blank: "+url)
-		return url;
-	}
-	
-	if (url.indexOf('index.php?') > -1)
-		url = url.substring(0,url.lastIndexOf("=")+1);
-	else
-		url = url.substring(0,url.lastIndexOf("/")+1);
-		
-	alert("page is not blank: "+url+page)
-	return url+page;
 }
 
 function loaded() {
