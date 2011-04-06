@@ -460,18 +460,7 @@ function cancelArticleRequest() {
 
 function properNameFromHTML(html) {
 	/* get the actual page title */
-	/*   stored in a js var, eg:  var wgPageName = "Brad_Pitt"; */
-	var properName = '';	
-	properNamePattern = /wgPageName ?= ?\"[^\n]+\n/;
-	if(properNameMatch = html.match(properNamePattern)) {
-	 	eval(properNameMatch[0]);
-		properName = wgPageName;
-	} else {
-		/* try to grab it from the html */
-		var dp = new DOMParser().parseFromString(html, 'application/xml');
-		properName = dp.getElementById("firstHeading").innerText.trim();
-		//TODO: does the id name change depending on user-set style preference?
-	}
+	var properName = $("#firstHeading", html).text();
 	return properName.replace(/_/g, ' ')
 }
 
