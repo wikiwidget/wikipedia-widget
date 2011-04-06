@@ -289,9 +289,9 @@ function keyPressed (event) {
         case 8: // delete
             if (!invalid) {
                 if (event.shiftKey) {
-                    theAction = goForwardInHistory;
+                    theAction = function(){ historian.goForward() }
                 } else {
-                    theAction = goBackInHistory;
+                    theAction = function(){ historian.goBack() }
                 }
             }
             break;
