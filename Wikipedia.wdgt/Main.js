@@ -512,7 +512,11 @@ function processRawHTML(html) {
 	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;
 	wikiReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(wikiPattern, wikiReplace);
-
+	
+	wiki2Pattern = /href="\/wiki\/(\S+)"/g;
+	wiki2Replace = 'href=\'javascript:searchWiki("$1", '+qlang+')\'';
+	html = html.replace(wiki2Pattern, wiki2Replace)
+	
 	imgPattern = /href=\n*"\/wiki\/(\S+)/g;
 	imgReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(imgPattern, imgReplace);
