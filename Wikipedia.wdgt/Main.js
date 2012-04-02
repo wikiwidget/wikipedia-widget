@@ -505,6 +505,12 @@ function processRawHTML(html) {
 		html = $("#content", html).html();
 		log('jquery #content div contents:'+html);
 	}
+	
+	// Use HTTP if protocol is unspecified
+    httpPattern = /(href|src)=\n*"\/\//g; //"
+    httpReplace = '$1="http://';
+    html = html.replace(httpPattern, httpReplace);
+
 	tocPattern = /a\shref="\#([^"]+)"/g;
 	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
 	html = html.replace(tocPattern, tocReplace);
