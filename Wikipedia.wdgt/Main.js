@@ -460,7 +460,7 @@ function cancelArticleRequest() {
 
 function properNameFromHTML(html) {
 	/* get the actual page title */
-	var properName = $("#firstHeading", html).text();
+	var properName = $("#firstHeading", html).text().trim();
 	return properName.replace(/_/g, ' ')
 }
 
