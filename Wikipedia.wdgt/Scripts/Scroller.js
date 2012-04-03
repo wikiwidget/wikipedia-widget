@@ -209,7 +209,7 @@ function hideScrollBar() {
 
 function mouseWheelMove(event) {
     if (scrollable) {
-        var clicks = window.event.wheelDelta/100;
+        var clicks = window.event.wheelDelta/10;
         scrollBy(clicks);
     }
 }
