@@ -37,6 +37,19 @@ function log(s) {
 	//alert(s);
 }
 
+/* Tries to find the current username, for use in paths to the user's home directory */
+function getUsername() {
+    //sometimes doesn't work
+    var userName = widget.system("/bin/echo \"${USER}\"", null).outputString.replace(/\n/, '');
+    if(!userName) {
+        // Works on my system
+        userName = widget.system("/usr/bin/who am i", null).outputString.split(" ")[0];
+    }
+    // If that doesn't work, could search for a writable /Users/*/Library/Caches/
+    
+    return userName;
+};
+
 function loaded() {
 		
 	vSize = 220;
@@ -66,9 +79,9 @@ function loaded() {
 	
 	calculateAndShowThumb(contentDiv);
 	if (window.widget) {
-		userName = widget.system("/bin/echo $USER", null).outputString.replace(/\n/, '');
-		log('userName='+userName)
-		log('trying to make cache dir');
+		userName = getUsername();
+        log("username="+userName);
+        log('trying to make cache dir');
 		widget.system("/bin/mkdir /Users/"+userName+"/Library/Caches/WikipediaWidget", systemCallHandler);
 	}
 
@@ -277,7 +290,7 @@ function searchWiki(search, lang, addToHistory, saveToCache) {
 	if (window.widget) {
 		log('deleting old cached files')
 		try {
-			widget.system("/usr/bin/find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", systemCallHandler);
+			widget.system("/usr/bin/find /Users/"+username+"/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", systemCallHandler);
 		} catch(e) {}
 	}
 	
@@ -1023,7 +1036,7 @@ function systemCallHandler(object) {
 function emptyCache() {
 	if (window.widget) {
 		try {
-			widget.system("/usr/bin/find ~/Library/Caches/WikipediaWidget -mmin +0 -delete", null);
+			widget.system("/usr/bin/find /Users/"+username+"/Library/Caches/WikipediaWidget -mmin +0 -delete", null);
 		} catch(e) {}
 	}
 }
