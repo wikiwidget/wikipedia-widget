@@ -37,6 +37,19 @@ function log(s) {
 	//alert(s);
 }
 
+/* Tries to find the current username, for use in paths to the user's home directory */
+function getUsername() {
+    //sometimes doesn't work
+    var userName = widget.system("/bin/echo \"${USER}\"", null).outputString.replace(/\n/, '');
+    if(!userName) {
+        // Works on my system
+        userName = widget.system("/usr/bin/who am i", null).outputString.split(" ")[0];
+    }
+    // If that doesn't work, could search for a writable /Users/*/Library/Caches/
+    
+    return userName;
+};
+
 function loaded() {
 		
 	vSize = 220;
@@ -66,9 +79,9 @@ function loaded() {
 	
 	calculateAndShowThumb(contentDiv);
 	if (window.widget) {
-		userName = widget.system("/bin/echo $USER", null).outputString.replace(/\n/, '');
-		log('userName='+userName)
-		log('trying to make cache dir');
+		userName = getUsername();
+        log("username="+userName);
+        log('trying to make cache dir');
 		widget.system("/bin/mkdir /Users/"+userName+"/Library/Caches/WikipediaWidget", systemCallHandler);
 	}
 
@@ -277,7 +290,7 @@ function searchWiki(search, lang, addToHistory, saveToCache) {
 	if (window.widget) {
 		log('deleting old cached files')
 		try {
-			widget.system("/usr/bin/find ~/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", systemCallHandler);
+			widget.system("/usr/bin/find /Users/"+username+"/Library/Caches/WikipediaWidget -mmin +"+ widget.preferenceForKey("CacheAge") +" -delete", systemCallHandler);
 		} catch(e) {}
 	}
 	
@@ -427,7 +440,7 @@ function checkRequestResponse(req, searchName, addToHistory, saveToCache) {
 function filePathForArticleName(name, lang) {
 	//TODO: clean me
 	
-	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
+	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp'); // fix syntax highlighting: '
 	sameNameForFileCount = 0;
 
 	//TODO: this:
@@ -466,7 +479,7 @@ function properNameFromHTML(html) {
 
 function langFromHTML(html) {
 	var lang = '';
-	var re = /wgContentLanguage ?= ?\"([^"]+)\"/;
+	var re = /wgContentLanguage ?= ?\"([^"]+)\"/; // fix syntax highlighting: "
 	var match = html.match(re);
 	if (match) {
 		lang = match[1];
@@ -497,8 +510,9 @@ function processRawHTML(html) {
 	log('properNameFromHTML: '+properName)
 	/* restrict ourselves to the contents of the "content" div */
 	try {
-		var xmlDoc = new DOMParser().parseFromString(html, 'application/xml');
-		html = xmlDoc.getElementById("content").innerHTML;
+		var xmlDoc = new DOMParser().parseFromString(html, 'text/html');
+		var htmlContentElem = xmlDoc.getElementById("content")
+        html = htmlContentElem.innerHTML;
 	} catch (e) {
 		log('DOMParser failed, trying jquery')
 		// no domparser (safari < 3)
@@ -507,15 +521,15 @@ function processRawHTML(html) {
 	}
 	
 	// Use HTTP if protocol is unspecified
-    httpPattern = /(href|src)=\n*"\/\//g; //"
+    httpPattern = /(href|src)=\n*"\/\//g; //";
     httpReplace = '$1="http://';
     html = html.replace(httpPattern, httpReplace);
 
-	tocPattern = /a\shref="\#([^"]+)"/g;
-	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
+	tocPattern = /a\shref="\#([^"]+)"/g; // fix syntax highlighting: "
+	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\''; 
 	html = html.replace(tocPattern, tocReplace);
 
-	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;
+	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;// fix syntax highlighting: "
 	wikiReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(wikiPattern, wikiReplace);
 	
@@ -523,25 +537,25 @@ function processRawHTML(html) {
 	wiki2Replace = 'href=\'javascript:searchWiki("$1", '+qlang+')\'';
 	html = html.replace(wiki2Pattern, wiki2Replace)
 	
-	imgPattern = /href=\n*"\/wiki\/(\S+)/g;
+	imgPattern = /href=\n*"\/wiki\/(\S+)/g; // fix syntax highlighting: "
 	imgReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(imgPattern, imgReplace);
 
-	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g
+	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g; // fix syntax highlighting: "
 	searchResNumReplace = 'href=\'javascript:searchWiki("$1$2", '+qlang+');\'';
 	html = html.replace(searchResNumPattern, searchResNumReplace);
 
-	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g
+	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g; // fix syntax highlighting: "
 	newEditReplace = 'href=\'javascript:searchWiki("$1", '+qlang+');\'';
 	html = html.replace(newEditPattern, newEditReplace);
 	
-	extPattern = /href=\n*"([^\s>]+)/g;
+	extPattern = /href=\n*"([^\s>]+)/g; // fix syntax highlighting: "
 	extReplace = 'href=\'javascript:openLinkInBrowser("$1, '+qlang+')\'';
 	html = html.replace(extPattern, extReplace);
 	
 	srcUrl = 'http://'+lang+'.wikipedia.org/';
 	
-	srcPattern = /src=\n*"\//g;
+	srcPattern = /src=\n*"\//g; // fix syntax highlighting: "
 	srcReplace = 'src="'+srcUrl;
 	html = html.replace(srcPattern, srcReplace);
 	//"
@@ -550,11 +564,11 @@ function processRawHTML(html) {
 	jumpnavPattern = /<div id="jump-to-nav">[^q]+?<\/div>/;
 	html = html.replace(jumpnavPattern, '');
 	
-	submitPattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g;
+	submitPattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g; // fix syntax highlighting: '
 	submitReplace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1", '+qlang+')\'';
 	html = html.replace(submitPattern, submitReplace);
 	
-	submitPattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g;
+	submitPattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g; // fix syntax highlighting: '
 	submitReplace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2", '+qlang+')\'';
 	html = html.replace(submitPattern, submitReplace);
 	
@@ -1023,7 +1037,7 @@ function systemCallHandler(object) {
 function emptyCache() {
 	if (window.widget) {
 		try {
-			widget.system("/usr/bin/find ~/Library/Caches/WikipediaWidget -mmin +0 -delete", null);
+			widget.system("/usr/bin/find /Users/"+username+"/Library/Caches/WikipediaWidget -mmin +0 -delete", null);
 		} catch(e) {}
 	}
 }
@@ -1124,7 +1138,7 @@ function HistoryObject(name, lang) {
 	name = name.replace(/\s/g, '_');
 	this.name = name;
 	this.lang = lang;
-	this.nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
+	this.nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp'); // fix syntax highlighting: '
 	sameNameForFileCount = 0;
 	// if (historyArray.length > 0) {
 	// 	for (i=1; i<historyArray.length; i++) {
@@ -1222,4 +1236,51 @@ function getLocalizedString(key) {
 
 String.prototype.trim = function() {
 	return this.replace(/^\s+|\s+$/g,"");
-}
+};
+
+/*
+ * DOMParser HTML extension
+ * 2012-02-02
+ *
+ * By Eli Grey, http://eligrey.com
+ * Public domain.
+ * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+ */
+
+/*! @source https://gist.github.com/1129031 */
+/*global document, DOMParser*/
+
+(function(DOMParser) {
+    "use strict";
+    var DOMParser_proto = DOMParser.prototype
+      , real_parseFromString = DOMParser_proto.parseFromString;
+
+    // Firefox/Opera/IE throw errors on unsupported types
+    try {
+        // WebKit returns null on unsupported types
+        if ((new DOMParser).parseFromString("", "text/html")) {
+            // text/html parsing is natively supported
+            return;
+        }
+    } catch (ex) {}
+
+    DOMParser_proto.parseFromString = function(markup, type) {
+        if (/^\s*text\/html\s*(?:;|$)/i.test(type)) {
+            var doc = document.implementation.createHTMLDocument("")
+              , doc_elt = doc.documentElement
+              , first_elt;
+
+            doc_elt.innerHTML = markup;
+            first_elt = doc_elt.firstElementChild;
+
+            if (doc_elt.childElementCount === 1
+                && first_elt.localName.toLowerCase() === "html") {
+                doc.replaceChild(first_elt, doc_elt);
+            }
+
+            return doc;
+        } else {
+            return real_parseFromString.apply(this, arguments);
+        }
+    };
+}(DOMParser));
