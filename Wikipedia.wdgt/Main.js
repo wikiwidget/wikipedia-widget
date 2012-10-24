@@ -440,7 +440,7 @@ function checkRequestResponse(req, searchName, addToHistory, saveToCache) {
 function filePathForArticleName(name, lang) {
 	//TODO: clean me
 	
-	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
+	nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp'); // fix syntax highlighting: '
 	sameNameForFileCount = 0;
 
 	//TODO: this:
@@ -479,7 +479,7 @@ function properNameFromHTML(html) {
 
 function langFromHTML(html) {
 	var lang = '';
-	var re = /wgContentLanguage ?= ?\"([^"]+)\"/;
+	var re = /wgContentLanguage ?= ?\"([^"]+)\"/; // fix syntax highlighting: "
 	var match = html.match(re);
 	if (match) {
 		lang = match[1];
@@ -521,15 +521,15 @@ function processRawHTML(html) {
 	}
 	
 	// Use HTTP if protocol is unspecified
-    httpPattern = /(href|src)=\n*"\/\//g; //"
+    httpPattern = /(href|src)=\n*"\/\//g; //";
     httpReplace = '$1="http://';
     html = html.replace(httpPattern, httpReplace);
 
-	tocPattern = /a\shref="\#([^"]+)"/g;
-	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\'';
+	tocPattern = /a\shref="\#([^"]+)"/g; // fix syntax highlighting: "
+	tocReplace = 'a href=\'javascript:scrollToAnchor("$1")\''; 
 	html = html.replace(tocPattern, tocReplace);
 
-	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;
+	wikiPattern = /href=\n*"\/wiki\/(\S+)\stitle=[^>]+/g;// fix syntax highlighting: "
 	wikiReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(wikiPattern, wikiReplace);
 	
@@ -537,25 +537,25 @@ function processRawHTML(html) {
 	wiki2Replace = 'href=\'javascript:searchWiki("$1", '+qlang+')\'';
 	html = html.replace(wiki2Pattern, wiki2Replace)
 	
-	imgPattern = /href=\n*"\/wiki\/(\S+)/g;
+	imgPattern = /href=\n*"\/wiki\/(\S+)/g; // fix syntax highlighting: "
 	imgReplace = 'href=\'javascript:searchWiki("$1, '+qlang+')\'';
 	html = html.replace(imgPattern, imgReplace);
 
-	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g
+	searchResNumPattern = /href="\/w\/index.php\?title=Special:Search&amp;search=([^&]+)([^"]+)"/g; // fix syntax highlighting: "
 	searchResNumReplace = 'href=\'javascript:searchWiki("$1$2", '+qlang+');\'';
 	html = html.replace(searchResNumPattern, searchResNumReplace);
 
-	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g
+	newEditPattern = /href="\/w\/index.php\?title=([^"]+)"/g; // fix syntax highlighting: "
 	newEditReplace = 'href=\'javascript:searchWiki("$1", '+qlang+');\'';
 	html = html.replace(newEditPattern, newEditReplace);
 	
-	extPattern = /href=\n*"([^\s>]+)/g;
+	extPattern = /href=\n*"([^\s>]+)/g; // fix syntax highlighting: "
 	extReplace = 'href=\'javascript:openLinkInBrowser("$1, '+qlang+')\'';
 	html = html.replace(extPattern, extReplace);
 	
 	srcUrl = 'http://'+lang+'.wikipedia.org/';
 	
-	srcPattern = /src=\n*"\//g;
+	srcPattern = /src=\n*"\//g; // fix syntax highlighting: "
 	srcReplace = 'src="'+srcUrl;
 	html = html.replace(srcPattern, srcReplace);
 	//"
@@ -564,11 +564,11 @@ function processRawHTML(html) {
 	jumpnavPattern = /<div id="jump-to-nav">[^q]+?<\/div>/;
 	html = html.replace(jumpnavPattern, '');
 	
-	submitPattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g;
+	submitPattern = /<input type=['"]submit["'] name=['"]([^'"]+)["']/g; // fix syntax highlighting: '
 	submitReplace = '<input type=\'submit\' name=\'$1\' onclick=\'processForm("$1", '+qlang+')\'';
 	html = html.replace(submitPattern, submitReplace);
 	
-	submitPattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g;
+	submitPattern = /<input(.*?)name=['"]([^'"]+)["'] type=['"]submit["']/g; // fix syntax highlighting: '
 	submitReplace = '<input$1type=\'submit\' name=\'$2\' onclick=\'processForm("$2", '+qlang+')\'';
 	html = html.replace(submitPattern, submitReplace);
 	
@@ -1138,7 +1138,7 @@ function HistoryObject(name, lang) {
 	name = name.replace(/\s/g, '_');
 	this.name = name;
 	this.lang = lang;
-	this.nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp');
+	this.nameForFile = name.replace(':', '-').replace(/[(]/g, "lp").replace(/[)]/g, "rp").replace(/'/g, 'qt').replace(/&/g, 'amp'); // fix syntax highlighting: '
 	sameNameForFileCount = 0;
 	// if (historyArray.length > 0) {
 	// 	for (i=1; i<historyArray.length; i++) {
