@@ -878,12 +878,22 @@ function compareVersion() {
 			lastUpdateCheckTime = dateNow;
 	   
 			var serverVersion = req.responseText;
-			if ((currentVersion != serverVersion) && (serverVersion != null) && (serverVersion != "")) {
-				document.getElementById('updateMessage').style.display='block';
+            if (serverVersion != null) {
+                serverVersion = serverVersion.trim();
+                if ((currentVersion != serverVersion) && (serverVersion != "")) {
+                    document.getElementById('updateMessage').style.display='block';
+                    log("Need to update from '"+currentVersion+"' to '"+serverVersion+"'.");
+                } else {
+                    log("Up to date");
+                    document.getElementById('updateMessage').style.display='none';
+                }
 			} else {
+                log("Update site unavailable");
 				document.getElementById('updateMessage').style.display='none';
 			}
-		}
+		} else {
+            log("Update site returned status "+req.status);
+        }
 	}
 }
 function toggleCommentWindow() {
