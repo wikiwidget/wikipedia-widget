@@ -865,7 +865,7 @@ function checkLastUpdateTime() {
 function checkForUpdate() {
 	req = new XMLHttpRequest();
 	req.onreadystatechange = compareVersion;
-	req.open("GET", "http://www.whatsinthehouse.com/widgets/wikiVersion.php", true);
+	req.open("GET", "http://wikiwidget.github.com/stableVersion.txt", true);
 	req.setRequestHeader("Cache-Control", "no-cache");
 	req.send(null);
 }
