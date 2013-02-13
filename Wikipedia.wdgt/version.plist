@@ -5,9 +5,9 @@
 	<key>BuildVersion</key>
 	<string>000</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.9.6</string>
+	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>0.9.6</string>
+	<string>1.0.0</string>
 	<key>ProjectName</key>
 	<string>WikipediaWidget</string>
 	<key>SourceVersion</key>
