@@ -7,7 +7,7 @@ Easy development setup:
 
     defaults write com.apple.dashboard devmode YES && killall Dock
 
-2. git clone git://github.com/sbillig/wikipedia-widget.git
+2. git clone git://github.com/wikiwidget/wikipedia-widget.git
 
 3. Double click the Wikipedia.wdgt bundle.
     
@@ -21,4 +21,4 @@ Easy development setup:
 
 8. Repeat steps 6 and 7 until you're satisfied.
 
-9. Send me a pull request on github or email me a patch (sbillig@whatsinthehouse.com).
+9. Send me a pull request on github or email me a patch (spencer@bliven.us).
